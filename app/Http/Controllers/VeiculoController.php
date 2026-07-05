@@ -56,7 +56,10 @@ class VeiculoController extends Controller
 
     public function show(Veiculo $veiculo)
     {
-        $veiculo->load(['cliente', 'ordensServico']);
+        $veiculo->load([
+            'cliente',
+            'ordensServico' => fn ($q) => $q->with(['statusAtualizacoes'])->orderByDesc('created_at'),
+        ]);
         
         return view('veiculos.show', compact('veiculo'));
     }

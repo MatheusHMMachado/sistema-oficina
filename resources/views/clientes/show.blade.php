@@ -190,6 +190,16 @@
 
     <!-- Histórico de Ordens de Serviço -->
     <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="mb-6 p-4 bg-orange-50 border border-orange-100 rounded-lg text-sm text-gray-700">
+            <p class="font-medium text-gray-900 mb-1">
+                <i class="fas fa-comments text-orange-primary mr-2"></i>
+                Feedback ao cliente (Portal)
+            </p>
+            <p>
+                Para informar <strong>andamento</strong> (em serviço, veículo pronto, atrasos etc.), use o atalho <strong>Feedback</strong> na ordem.
+                As mensagens aparecem para o cliente no <strong>Portal do Cliente</strong> (consulta por CPF), no mesmo fluxo da OS.
+            </p>
+        </div>
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                 <i class="fas fa-history text-indigo-500 mr-2"></i>
@@ -212,18 +222,29 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última msg ao cliente</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($cliente->ordensServico->take(10) as $ordem)
+                            @php
+                                $ultimaAtualizacao = $ordem->statusAtualizacoes
+                                    ->filter(fn ($at) => filled($at->mensagem))
+                                    ->sortByDesc('data_atualizacao')
+                                    ->first();
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm font-medium text-gray-900">{{ $ordem->numero_ordem }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $ordem->veiculo->marca }} {{ $ordem->veiculo->modelo }}</div>
-                                    <div class="text-sm text-gray-500">{{ $ordem->veiculo->placa_formatada }}</div>
+                                    @if($ordem->veiculo)
+                                        <div class="text-sm text-gray-900">{{ $ordem->veiculo->marca }} {{ $ordem->veiculo->modelo }}</div>
+                                        <div class="text-sm text-gray-500">{{ $ordem->veiculo->placa_formatada }}</div>
+                                    @else
+                                        <span class="text-sm text-gray-400">—</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -239,17 +260,29 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $ordem->data_entrada->format('d/m/Y') }}
                                 </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                                    @if($ultimaAtualizacao && $ultimaAtualizacao->mensagem)
+                                        <span title="{{ $ultimaAtualizacao->mensagem }}">{{ \Illuminate\Support\Str::limit($ultimaAtualizacao->mensagem, 55) }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
-                                        <a href="{{ route('ordens.show', $ordem) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900" 
+                                        <a href="{{ route('ordens.show', $ordem) }}#secao-feedback-cliente"
+                                           class="text-indigo-600 hover:text-indigo-900"
                                            title="Ver OS">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @if($ordem->status !== 'concluida')
-                                            <a href="{{ route('ordens.edit', $ordem) }}" 
-                                               class="text-orange-600 hover:text-orange-900" 
-                                               title="Editar">
+                                            <a href="{{ route('ordens.edit', $ordem) }}#secao-feedback-cliente"
+                                               class="text-orange-600 hover:text-orange-900"
+                                               title="Feedback ao cliente (Portal)">
+                                                <i class="fas fa-comments"></i>
+                                            </a>
+                                            <a href="{{ route('ordens.edit', $ordem) }}"
+                                               class="text-gray-600 hover:text-gray-900"
+                                               title="Editar OS">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         @endif

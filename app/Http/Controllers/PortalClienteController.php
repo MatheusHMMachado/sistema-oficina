@@ -231,8 +231,10 @@ class PortalClienteController extends Controller
 
         $ordem = OrdemServico::where('cliente_id', $cliente->id)
             ->where('id', $ordemId)
-            ->with(['veiculo', 'itens.servicoPeca', 'checklist', 'statusAtualizacoes.usuario'])
+            ->with(['veiculo', 'itens.servicoPeca', 'checklist.fotos', 'statusAtualizacoes.usuario'])
             ->firstOrFail();
+
+        $ordem->loadMissing(['checklist.fotos']);
 
         return view('portal.ordem-detalhes-publica', compact('ordem', 'cliente'));
     }
@@ -245,8 +247,10 @@ class PortalClienteController extends Controller
         $cliente = $this->getClienteLogado();
         
         $ordem = OrdemServico::where('cliente_id', $cliente->id)
-            ->with(['veiculo', 'itens.servicoPeca', 'checklist', 'statusAtualizacoes.usuario'])
+            ->with(['veiculo', 'cliente', 'itens.servicoPeca', 'checklist.fotos', 'statusAtualizacoes.usuario'])
             ->findOrFail($ordemId);
+
+        $ordem->loadMissing(['checklist.fotos']);
 
         return view('portal.ordem-detalhes', compact('ordem'));
     }
@@ -287,9 +291,67 @@ class PortalClienteController extends Controller
      */
     public function lembretes()
     {
+        return redirect()->route('portal.dashboard')
+            ->with('error', 'Módulo de lembretes ainda não está disponível nesta versão.');
+    }
+
+    /**
+     * Salvar lembretes (placeholder até módulo completo)
+     */
+    public function salvarLembretes(Request $request)
+    {
+        return redirect()->route('portal.dashboard')
+            ->with('error', 'Configuração de lembretes ainda não está disponível.');
+    }
+
+    /**
+     * Solicitar orçamento (placeholder até módulo completo)
+     */
+    public function orcamento()
+    {
+        return redirect()->route('portal.dashboard')
+            ->with('error', 'Módulo de orçamento ainda não está disponível nesta versão.');
+    }
+
+    /**
+     * Enviar solicitação de orçamento (placeholder até módulo completo)
+     */
+    public function enviarOrcamento(Request $request)
+    {
+        return redirect()->route('portal.dashboard')
+            ->with('error', 'Solicitação de orçamento ainda não está disponível.');
+    }
+
+    /**
+     * Histórico completo das ordens do cliente logado
+     */
+    public function historicoCompleto()
+    {
         $cliente = $this->getClienteLogado();
-        
-        return view('portal.lembretes', compact('cliente'));
+
+        $ordens = OrdemServico::where('cliente_id', $cliente->id)
+            ->with(['veiculo', 'statusAtualizacoes.usuario'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('portal.status-veiculo', compact('cliente', 'ordens'));
+    }
+
+    /**
+     * Acesso via QR token (abre consulta pública já filtrada pelo CPF)
+     */
+    public function acessoQR($token)
+    {
+        $cliente = Cliente::where('token_acesso', $token)->first();
+
+        if (!$cliente) {
+            return redirect()->route('portal.consulta-publica')
+                ->with('error', 'Token de acesso inválido ou expirado.');
+        }
+
+        return redirect()->route('portal.consulta-publica', [
+            'cpf' => preg_replace('/[^0-9]/', '', (string) $cliente->cpf),
+        ]);
     }
 
     /**

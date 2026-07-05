@@ -23,23 +23,32 @@ class FotoChecklist extends Model
         return $this->belongsTo(Checklist::class);
     }
 
-    // Accessor para URL da foto
-    public function getUrlFotoAttribute()
+    /**
+     * URL pública da foto (symlink public/storage → storage/app/public).
+     * Usa asset() para respeitar subpastas no XAMPP (ex.: .../sistema-oficina/public).
+     */
+    public function getUrlFotoAttribute(): string
     {
-        // Se o caminho já começa com 'public/', remover
-        $caminho = str_replace('public/', '', $this->caminho_foto);
-        
-        // Retornar URL usando Storage::url que automaticamente adiciona 'storage/'
-        return Storage::url($caminho);
+        $raw = (string) ($this->attributes['caminho_foto'] ?? '');
+        if ($raw === '') {
+            return '';
+        }
+
+        $relative = ltrim(str_replace('public/', '', $raw), '/');
+
+        return $relative === '' ? '' : asset('storage/' . $relative);
     }
 
-    // Método para deletar foto do storage ao deletar o registro
     protected static function boot()
     {
         parent::boot();
-        
+
         static::deleted(function ($foto) {
-            Storage::delete($foto->caminho_foto);
+            $raw = (string) ($foto->caminho_foto ?? '');
+            $relative = ltrim(str_replace('public/', '', $raw), '/');
+            if ($relative !== '') {
+                Storage::disk('public')->delete($relative);
+            }
         });
     }
 }

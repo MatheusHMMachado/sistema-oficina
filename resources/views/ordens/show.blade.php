@@ -44,7 +44,7 @@
 
         <!-- Feedback para o Cliente (ambiente separado: Portal do Cliente) -->
         @if($ordem->cliente)
-            <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-5 mb-6 border-2 border-orange-200">
+            <div id="secao-feedback-cliente" class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-5 mb-6 border-2 border-orange-200 scroll-mt-24">
                 <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                     <i class="fas fa-comments text-orange-primary mr-2"></i>
                     Feedback para o Cliente

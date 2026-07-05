@@ -96,18 +96,7 @@ class OrdemServicoController extends Controller
     {
         // Carregar relacionamentos com verificação
         $ordem->load(['cliente', 'veiculo', 'itens.servicoPeca']);
-        
-        // Verificar se cliente e veículo existem
-        if (!$ordem->cliente) {
-            return redirect()->route('ordens.index')
-                           ->with('error', 'Cliente associado a esta ordem não foi encontrado. A ordem pode estar corrompida.');
-        }
-        
-        if (!$ordem->veiculo) {
-            return redirect()->route('ordens.index')
-                           ->with('error', 'Veículo associado a esta ordem não foi encontrado. A ordem pode estar corrompida.');
-        }
-        
+
         $servicosPecas = ServicoPeca::where('ativo', true)->orderBy('descricao')->get();
         
         return view('ordens.edit', compact('ordem', 'servicosPecas'));
@@ -194,6 +183,10 @@ class OrdemServicoController extends Controller
     // Atualizar status da ordem
     public function updateStatus(Request $request, OrdemServico $ordem)
     {
+        if (!$ordem->cliente) {
+            return back()->with('error', 'Não é possível enviar feedback ao portal: cliente desta OS não foi encontrado.');
+        }
+
         $request->validate([
             'status' => 'required|in:aberta,em_andamento,concluida,cancelada',
             'mensagem' => 'nullable|string|max:500',
@@ -221,6 +214,10 @@ class OrdemServicoController extends Controller
     // Adicionar atualização de status com feedback
     public function adicionarAtualizacaoStatus(Request $request, OrdemServico $ordem)
     {
+        if (!$ordem->cliente) {
+            return back()->with('error', 'Não é possível enviar mensagem ao portal: cliente desta OS não foi encontrado.');
+        }
+
         $request->validate([
             'mensagem' => 'required|string|max:500',
             'observacoes' => 'nullable|string'

@@ -41,9 +41,10 @@
             </div>
         </div>
 
-        <!-- Feedback para o Cliente (o cliente vê em outro ambiente: Portal do Cliente) -->
-        @if($ordem->cliente)
-            <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-5 mb-6 border-2 border-orange-200">
+        <!-- Feedback para o Cliente (âncora #secao-feedback-cliente para atalhos do perfil cliente/veículo) -->
+        <div id="secao-feedback-cliente" class="scroll-mt-24 space-y-6">
+            @if($ordem->cliente)
+            <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-5 border-2 border-orange-200">
                 <h4 class="font-semibold text-gray-900 mb-2 flex items-center">
                     <i class="fas fa-comments text-orange-primary mr-2"></i>
                     Feedback para o Cliente
@@ -58,6 +59,27 @@
                     Abrir Portal do Cliente
                 </a>
             </div>
+            @endif
+
+        @if(!$ordem->cliente || !$ordem->veiculo)
+            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <p class="font-semibold mb-1">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Dados vinculados da OS estão incompletos
+                </p>
+                <p>
+                    @if(!$ordem->cliente)
+                        Cliente não encontrado para esta OS.
+                    @endif
+                    @if(!$ordem->cliente && !$ordem->veiculo)
+                        &nbsp;
+                    @endif
+                    @if(!$ordem->veiculo)
+                        Veículo não encontrado para esta OS.
+                    @endif
+                    Você ainda pode revisar a ordem, mas o envio de feedback para o portal depende de cliente vinculado.
+                </p>
+            </div>
         @endif
 
         <!-- Status e Informações Básicas -->
@@ -68,41 +90,47 @@
                     <i class="fas fa-paper-plane text-orange-primary mr-2"></i>
                     Dar feedback do serviço ao cliente
                 </h3>
-                <p class="text-xs text-gray-600 mb-3">Altere o status (se quiser) e escreva a mensagem que o cliente verá no Portal do Cliente.</p>
-                <form method="POST" action="{{ route('ordens.update-status', $ordem) }}" class="space-y-3">
-                    @csrf
-                    @method('PATCH')
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-                            <option value="aberta" {{ $ordem->status === 'aberta' ? 'selected' : '' }}>Aberta</option>
-                            <option value="em_andamento" {{ $ordem->status === 'em_andamento' ? 'selected' : '' }}>Em Andamento</option>
-                            <option value="concluida" {{ $ordem->status === 'concluida' ? 'selected' : '' }}>Concluída</option>
-                            <option value="cancelada" {{ $ordem->status === 'cancelada' ? 'selected' : '' }}>Cancelada</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Mensagem para o cliente *</label>
-                        <textarea name="mensagem" 
-                                  rows="2"
-                                  required
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                                  placeholder="Ex: Veículo em manutenção; previsão amanhã."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Observações internas (opcional)</label>
-                        <textarea name="observacoes" 
-                                  rows="2"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                                  placeholder="Só para a equipe."></textarea>
-                    </div>
-                    <button type="submit" 
-                            class="w-full px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors">
-                        <i class="fas fa-paper-plane mr-2"></i>
-                        Enviar feedback ao cliente
-                    </button>
-                </form>
+                @if($ordem->cliente)
+                    <p class="text-xs text-gray-600 mb-3">Altere o status (se quiser) e escreva a mensagem que o cliente verá no Portal do Cliente.</p>
+                    <form method="POST" action="{{ route('ordens.update-status', $ordem) }}" class="space-y-3">
+                        @csrf
+                        @method('PATCH')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
+                                <option value="aberta" {{ $ordem->status === 'aberta' ? 'selected' : '' }}>Aberta</option>
+                                <option value="em_andamento" {{ $ordem->status === 'em_andamento' ? 'selected' : '' }}>Em Andamento</option>
+                                <option value="concluida" {{ $ordem->status === 'concluida' ? 'selected' : '' }}>Concluída</option>
+                                <option value="cancelada" {{ $ordem->status === 'cancelada' ? 'selected' : '' }}>Cancelada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mensagem para o cliente *</label>
+                            <textarea name="mensagem" 
+                                      rows="2"
+                                      required
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                                      placeholder="Ex: Veículo em manutenção; previsão amanhã."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Observações internas (opcional)</label>
+                            <textarea name="observacoes" 
+                                      rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                                      placeholder="Só para a equipe."></textarea>
+                        </div>
+                        <button type="submit" 
+                                class="w-full px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Enviar feedback ao cliente
+                        </button>
+                    </form>
+                @else
+                    <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        Feedback indisponível: esta OS não possui cliente vinculado.
+                    </p>
+                @endif
             </div>
 
             <!-- Informações da Ordem -->
@@ -127,6 +155,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 
@@ -300,37 +329,43 @@
     </div>
 
     <!-- Enviar apenas mensagem ao cliente (sem mudar status) -->
-    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-primary">
+    <div id="secao-mensagem-cliente" class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-primary scroll-mt-24">
         <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <i class="fas fa-comment-dots text-orange-primary mr-2"></i>
             Enviar apenas mensagem ao cliente
         </h3>
-        <p class="text-sm text-gray-600 mb-4">
-            Enviar uma mensagem que o cliente verá no Portal do Cliente, sem alterar o status da ordem.
-        </p>
-        <form method="POST" action="{{ route('ordens.adicionar-atualizacao', $ordem) }}" class="space-y-3">
-            @csrf
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Mensagem para o cliente *</label>
-                <textarea name="mensagem" 
-                          rows="3"
-                          required
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                          placeholder="Ex: Peças encomendadas, chegada prevista para amanhã..."></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Observações internas (opcional)</label>
-                <textarea name="observacoes" 
-                          rows="2"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                          placeholder="Só para a equipe."></textarea>
-            </div>
-            <button type="submit" 
-                    class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors">
-                <i class="fas fa-paper-plane mr-2"></i>
-                Enviar mensagem
-            </button>
-        </form>
+        @if($ordem->cliente)
+            <p class="text-sm text-gray-600 mb-4">
+                Enviar uma mensagem que o cliente verá no Portal do Cliente, sem alterar o status da ordem.
+            </p>
+            <form method="POST" action="{{ route('ordens.adicionar-atualizacao', $ordem) }}" class="space-y-3">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mensagem para o cliente *</label>
+                    <textarea name="mensagem" 
+                              rows="3"
+                              required
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                              placeholder="Ex: Peças encomendadas, chegada prevista para amanhã..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Observações internas (opcional)</label>
+                    <textarea name="observacoes" 
+                              rows="2"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                              placeholder="Só para a equipe."></textarea>
+                </div>
+                <button type="submit" 
+                        class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Enviar mensagem
+                </button>
+            </form>
+        @else
+            <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Mensagem ao portal indisponível: esta OS não possui cliente vinculado.
+            </p>
+        @endif
     </div>
 
     <!-- Ações Rápidas -->

@@ -49,7 +49,10 @@ class ClienteController extends Controller
 
     public function show(Cliente $cliente)
     {
-        $cliente->load(['veiculos', 'ordensServico.veiculo']);
+        $cliente->load([
+            'veiculos',
+            'ordensServico' => fn ($q) => $q->with(['veiculo', 'statusAtualizacoes'])->orderByDesc('created_at'),
+        ]);
         
         return view('clientes.show', compact('cliente'));
     }

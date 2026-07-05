@@ -98,7 +98,9 @@ Route::middleware(['auth', 'checkActive'])->group(function () {
     Route::resource('veiculos', VeiculoController::class);
     
     // GESTÃO DE ORDENS DE SERVIÇO
-    Route::resource('ordens', OrdemServicoController::class);
+    Route::resource('ordens', OrdemServicoController::class)->parameters([
+        'ordens' => 'ordem',
+    ]);
     Route::patch('/ordens/{ordem}/status', [OrdemServicoController::class, 'updateStatus'])->name('ordens.update-status');
     Route::post('/ordens/{ordem}/adicionar-atualizacao', [OrdemServicoController::class, 'adicionarAtualizacaoStatus'])->name('ordens.adicionar-atualizacao');
     Route::post('/ordens/{ordem}/adicionar-item', [OrdemServicoController::class, 'adicionarItem'])->name('ordens.adicionar-item');

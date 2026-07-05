@@ -144,6 +144,15 @@
 
     <!-- Histórico de Ordens de Serviço -->
     <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="mb-6 p-4 bg-orange-50 border border-orange-100 rounded-lg text-sm text-gray-700">
+            <p class="font-medium text-gray-900 mb-1">
+                <i class="fas fa-comments text-orange-primary mr-2"></i>
+                Feedback ao cliente (Portal)
+            </p>
+            <p>
+                Use o ícone de <strong>balão</strong> para abrir a OS na seção de feedback: o cliente vê andamento e status no <strong>Portal do Cliente</strong> (CPF).
+            </p>
+        </div>
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                 <i class="fas fa-history text-purple-500 mr-2"></i>
@@ -166,11 +175,18 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Entrada</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KM</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última msg ao cliente</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($veiculo->ordensServico as $ordem)
+                            @php
+                                $ultimaAtualizacaoV = $ordem->statusAtualizacoes
+                                    ->filter(fn ($at) => filled($at->mensagem))
+                                    ->sortByDesc('data_atualizacao')
+                                    ->first();
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm font-medium text-gray-900">{{ $ordem->numero_ordem }}</span>
@@ -192,17 +208,29 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ number_format($ordem->km_entrada ?? 0) }}
                                 </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                                    @if($ultimaAtualizacaoV && $ultimaAtualizacaoV->mensagem)
+                                        <span title="{{ $ultimaAtualizacaoV->mensagem }}">{{ \Illuminate\Support\Str::limit($ultimaAtualizacaoV->mensagem, 55) }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
-                                        <a href="{{ route('ordens.show', $ordem) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900" 
+                                        <a href="{{ route('ordens.show', $ordem) }}#secao-feedback-cliente"
+                                           class="text-indigo-600 hover:text-indigo-900"
                                            title="Ver OS">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @if($ordem->status !== 'concluida')
-                                            <a href="{{ route('ordens.edit', $ordem) }}" 
-                                               class="text-orange-600 hover:text-orange-900" 
-                                               title="Editar">
+                                            <a href="{{ route('ordens.edit', $ordem) }}#secao-feedback-cliente"
+                                               class="text-orange-600 hover:text-orange-900"
+                                               title="Feedback ao cliente (Portal)">
+                                                <i class="fas fa-comments"></i>
+                                            </a>
+                                            <a href="{{ route('ordens.edit', $ordem) }}"
+                                               class="text-gray-600 hover:text-gray-900"
+                                               title="Editar OS">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         @endif
