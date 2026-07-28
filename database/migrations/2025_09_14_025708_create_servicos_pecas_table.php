@@ -12,9 +12,13 @@ return new class extends Migration
             $table->id();
             $table->string('descricao');
             $table->decimal('valor_unitario', 10, 2);
-            $table->enum('tipo', ['servico', 'peca']);
+            // string em vez de enum nativo MySQL — compatível com PostgreSQL
+            $table->string('tipo', 20);
             $table->boolean('ativo')->default(true);
             $table->timestamps();
+
+            $table->index('tipo');
+            $table->index('ativo');
         });
     }
 

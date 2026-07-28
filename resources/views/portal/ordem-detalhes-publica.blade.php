@@ -6,7 +6,7 @@
 @include('portal.partials.ordem-detalhes-conteudo', [
     'ordem' => $ordem,
     'cliente' => $cliente,
-    'voltarHref' => route('portal.consulta-publica'),
+    'voltarHref' => route('portal.home'),
     'voltarLabel' => 'Voltar',
 ])
 @endsection

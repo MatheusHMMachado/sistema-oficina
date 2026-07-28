@@ -10,16 +10,15 @@ if (!file_exists($envPath)) {
 
 $envContent = file_get_contents($envPath);
 
-echo "=== VERIFICAÇÃO DO ARQUIVO .env ===\n\n";
+echo "=== VERIFICAÇÃO DO ARQUIVO .env (PostgreSQL) ===\n\n";
 
-// Verificar configurações do banco
 $required = [
-    'DB_CONNECTION' => 'mysql',
+    'DB_CONNECTION' => 'pgsql',
     'DB_HOST' => '127.0.0.1',
-    'DB_PORT' => '3306',
+    'DB_PORT' => '5432',
     'DB_DATABASE' => 'sistema_oficina',
-    'DB_USERNAME' => 'root',
-    'DB_PASSWORD' => '', // Pode ser vazio
+    'DB_USERNAME' => 'postgres',
+    'DB_PASSWORD' => '',
 ];
 
 $missing = [];
@@ -28,10 +27,15 @@ $incorrect = [];
 foreach ($required as $key => $default) {
     if (preg_match("/^{$key}=(.*)$/m", $envContent, $matches)) {
         $value = trim($matches[1]);
-        echo "✓ {$key} = " . ($key === 'DB_PASSWORD' && empty($value) ? '(vazio)' : $value) . "\n";
-        
-        if ($key === 'DB_DATABASE' && empty($value)) {
+        echo "✓ {$key} = " . ($key === 'DB_PASSWORD' && $value === '' ? '(vazio)' : $value) . "\n";
+
+        if ($key === 'DB_DATABASE' && $value === '') {
             $incorrect[] = $key;
+        }
+
+        if ($key === 'DB_CONNECTION' && $value !== 'pgsql') {
+            $incorrect[] = $key;
+            echo "  ⚠ Esperado: pgsql\n";
         }
     } else {
         $missing[] = $key;
@@ -43,7 +47,7 @@ echo "\n";
 
 if (!empty($missing) || !empty($incorrect)) {
     echo "=== PROBLEMAS ENCONTRADOS ===\n\n";
-    
+
     if (!empty($missing)) {
         echo "Configurações faltando:\n";
         foreach ($missing as $key) {
@@ -51,40 +55,27 @@ if (!empty($missing) || !empty($incorrect)) {
         }
         echo "\n";
     }
-    
+
     if (!empty($incorrect)) {
         echo "Configurações incorretas:\n";
         foreach ($incorrect as $key) {
-            echo "  - {$key} está vazio\n";
+            echo "  - {$key}\n";
         }
         echo "\n";
     }
-    
-    echo "=== CONFIGURAÇÃO RECOMENDADA ===\n\n";
-    echo "Adicione ou corrija estas linhas no arquivo .env:\n\n";
-    
+
+    echo "=== CONFIGURAÇÃO RECOMENDADA (PostgreSQL) ===\n\n";
     foreach ($required as $key => $default) {
-        if (in_array($key, $missing) || in_array($key, $incorrect)) {
-            if ($key === 'DB_PASSWORD') {
-                echo "{$key}=\n";
-            } else {
-                echo "{$key}={$default}\n";
-            }
-        }
+        echo "{$key}={$default}\n";
     }
-    
-    echo "\n";
-    echo "IMPORTANTE: Se você configurou uma senha para o MySQL, altere DB_PASSWORD=\n";
-    echo "para DB_PASSWORD=sua_senha_aqui\n";
-    
+    echo "\nDefina DB_PASSWORD com a senha do usuário postgres, se houver.\n";
 } else {
-    echo "✓ Todas as configurações do banco estão presentes!\n";
-    echo "\n";
-    echo "Se ainda estiver dando erro, verifique:\n";
-    echo "1. MySQL está rodando no XAMPP?\n";
-    echo "2. O banco 'sistema_oficina' existe?\n";
-    echo "3. A senha do MySQL está correta?\n";
+    echo "✓ Configurações do banco presentes!\n\n";
+    echo "Verifique também:\n";
+    echo "1. Serviço PostgreSQL em execução\n";
+    echo "2. Banco 'sistema_oficina' criado\n";
+    echo "3. Extensão PHP pdo_pgsql habilitada\n";
+    echo "4. Senha do usuário postgres correta no .env\n";
 }
 
 echo "\n";
-

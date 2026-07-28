@@ -50,9 +50,9 @@
                     Feedback para o Cliente
                 </h4>
                 <p class="text-sm text-gray-600 mb-4">
-                    O cliente vê o andamento em <strong>outro ambiente</strong> (Portal do Cliente), consultando com o CPF. Aqui você só envia os feedbacks do serviço até a conclusão.
+                    O cliente vê o andamento no <strong>Portal do Cliente</strong> (fotos, orçamento e status). Aqui você envia os feedbacks do serviço.
                 </p>
-                <a href="{{ url('/portal/consulta') }}?cpf={{ preg_replace('/[^0-9]/', '', $ordem->cliente->cpf) }}"
+                <a href="{{ route('portal.home', ['cpf' => preg_replace('/[^0-9]/', '', $ordem->cliente->cpf)]) }}"
                    target="_blank"
                    class="inline-flex items-center px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors text-sm mb-4">
                     <i class="fas fa-external-link-alt mr-2"></i>
@@ -179,8 +179,11 @@
                     @foreach($servicosPecas->groupBy('tipo') as $tipo => $items)
                         <optgroup label="{{ $tipo === 'servico' ? 'Serviços' : 'Peças' }}">
                             @foreach($items as $item)
-                                <option value="{{ $item->id }}">
+                                <option value="{{ $item->id }}" @if($item->tipo === 'peca' && $item->quantidade_estoque <= 0) disabled @endif>
                                     {{ $item->descricao }} - R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}
+                                    @if($item->tipo === 'peca')
+                                        (Estoque: {{ $item->quantidade_estoque }} un)
+                                    @endif
                                 </option>
                             @endforeach
                         </optgroup>

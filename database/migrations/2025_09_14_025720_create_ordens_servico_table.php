@@ -16,10 +16,13 @@ return new class extends Migration
             $table->date('data_entrada');
             $table->date('data_saida')->nullable();
             $table->integer('km_entrada')->nullable();
-            $table->enum('status', ['aberta', 'em_andamento', 'concluida', 'cancelada'])->default('aberta');
+            // string em vez de enum nativo MySQL — compatível com PostgreSQL
+            $table->string('status', 20)->default('aberta');
             $table->text('observacoes')->nullable();
             $table->decimal('valor_total', 10, 2)->default(0);
             $table->timestamps();
+
+            $table->index('status');
         });
     }
 

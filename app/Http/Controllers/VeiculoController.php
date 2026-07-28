@@ -37,21 +37,29 @@ class VeiculoController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizarPlaca($request);
+
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'marca' => 'required|string|max:255',
             'modelo' => 'required|string|max:255',
             'cor' => 'required|string|max:255',
             'ano' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'placa' => 'required|string|max:8|unique:veiculos,placa',
+            'placa' => 'required|string|min:7|max:7|unique:veiculos,placa',
             'chassi' => 'nullable|string|max:255',
             'km' => 'nullable|integer|min:0',
+        ], [
+            'placa.unique' => 'Esta placa já está cadastrada.',
+            'placa.min' => 'Informe uma placa válida (7 caracteres).',
+            'placa.max' => 'Informe uma placa válida (7 caracteres).',
         ]);
 
-        Veiculo::create($request->all());
+        Veiculo::create($request->only([
+            'cliente_id', 'marca', 'modelo', 'cor', 'ano', 'placa', 'chassi', 'km',
+        ]));
 
         return redirect()->route('veiculos.index')
-                         ->with('success', 'Veículo cadastrado com sucesso!');
+            ->with('success', 'Veículo cadastrado com sucesso!');
     }
 
     public function show(Veiculo $veiculo)
@@ -60,7 +68,7 @@ class VeiculoController extends Controller
             'cliente',
             'ordensServico' => fn ($q) => $q->with(['statusAtualizacoes'])->orderByDesc('created_at'),
         ]);
-        
+
         return view('veiculos.show', compact('veiculo'));
     }
 
@@ -72,21 +80,39 @@ class VeiculoController extends Controller
 
     public function update(Request $request, Veiculo $veiculo)
     {
+        $this->normalizarPlaca($request);
+
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'marca' => 'required|string|max:255',
             'modelo' => 'required|string|max:255',
             'cor' => 'required|string|max:255',
             'ano' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'placa' => 'required|string|max:8|unique:veiculos,placa,' . $veiculo->id,
+            'placa' => 'required|string|min:7|max:7|unique:veiculos,placa,' . $veiculo->id,
             'chassi' => 'nullable|string|max:255',
             'km' => 'nullable|integer|min:0',
+        ], [
+            'placa.unique' => 'Esta placa já está cadastrada.',
+            'placa.min' => 'Informe uma placa válida (7 caracteres).',
+            'placa.max' => 'Informe uma placa válida (7 caracteres).',
         ]);
 
-        $veiculo->update($request->all());
+        $veiculo->update($request->only([
+            'cliente_id', 'marca', 'modelo', 'cor', 'ano', 'placa', 'chassi', 'km',
+        ]));
 
         return redirect()->route('veiculos.index')
-                         ->with('success', 'Veículo atualizado com sucesso!');
+            ->with('success', 'Veículo atualizado com sucesso!');
+    }
+
+    /**
+     * Remove hífen/espaços e padroniza a placa em maiúsculas (ex.: ABC-1D23 → ABC1D23).
+     */
+    private function normalizarPlaca(Request $request): void
+    {
+        $request->merge([
+            'placa' => strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $request->input('placa', ''))),
+        ]);
     }
 
     public function destroy(Veiculo $veiculo)
@@ -94,10 +120,10 @@ class VeiculoController extends Controller
         try {
             $veiculo->delete();
             return redirect()->route('veiculos.index')
-                             ->with('success', 'Veículo excluído com sucesso!');
+                ->with('success', 'Veículo excluído com sucesso!');
         } catch (\Exception $e) {
             return redirect()->route('veiculos.index')
-                             ->with('error', 'Não é possível excluir veículo com ordens de serviço!');
+                ->with('error', 'Não é possível excluir veículo com ordens de serviço!');
         }
     }
 }

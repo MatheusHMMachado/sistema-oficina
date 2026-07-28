@@ -70,7 +70,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-yellow-600">Abertas</p>
-                    <p class="text-lg font-semibold text-yellow-900">{{ $ordens->where('status', 'aberta')->count() }}</p>
+                    <p class="text-lg font-semibold text-yellow-900">{{ $statusCounts['aberta'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
@@ -82,7 +82,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-orange-600">Em Andamento</p>
-                    <p class="text-lg font-semibold text-orange-900">{{ $ordens->where('status', 'em_andamento')->count() }}</p>
+                    <p class="text-lg font-semibold text-orange-900">{{ $statusCounts['em_andamento'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-600">Concluídas</p>
-                    <p class="text-lg font-semibold text-green-900">{{ $ordens->where('status', 'concluida')->count() }}</p>
+                    <p class="text-lg font-semibold text-green-900">{{ $statusCounts['concluida'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
@@ -106,7 +106,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-red-600">Canceladas</p>
-                    <p class="text-lg font-semibold text-red-900">{{ $ordens->where('status', 'cancelada')->count() }}</p>
+                    <p class="text-lg font-semibold text-red-900">{{ $statusCounts['cancelada'] ?? 0 }}</p>
                 </div>
             </div>
         </div>

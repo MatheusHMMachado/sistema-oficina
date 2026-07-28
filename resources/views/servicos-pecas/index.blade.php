@@ -11,13 +11,11 @@
             <h1 class="text-2xl font-bold text-gray-900">Serviços e Peças</h1>
             <p class="text-gray-600">Gerencie o catálogo de serviços e peças</p>
         </div>
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('servicos-pecas.create') }}" 
-               class="inline-flex items-center px-6 py-3 btn-primary text-white rounded-lg font-medium">
-                <i class="fas fa-plus mr-2"></i>
-                Novo Item
-            </a>
-        @endif
+        <a href="{{ route('servicos-pecas.create') }}" 
+           class="inline-flex items-center px-6 py-3 btn-primary text-white rounded-lg font-medium">
+            <i class="fas fa-plus mr-2"></i>
+            Novo Item
+        </a>
     </div>
 
     <!-- Filtros -->
@@ -71,13 +69,15 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estoque</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($servicosPecas as $item)
-                            <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <tr class="hover:bg-gray-50 transition-colors duration-150
+                                {{ $item->estoqueCritico() ? 'bg-rose-50' : ($item->estoqueBaixo() ? 'bg-amber-50' : '') }}">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="w-10 h-10 {{ $item->tipo == 'servico' ? 'bg-green-100' : 'bg-purple-100' }} rounded-full flex items-center justify-center">
@@ -85,6 +85,11 @@
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">{{ $item->descricao }}</div>
+                                            @if($item->estoqueCritico())
+                                                <div class="text-xs font-semibold text-rose-700">Estoque zerado — reposição urgente</div>
+                                            @elseif($item->estoqueBaixo())
+                                                <div class="text-xs font-semibold text-amber-700">Abaixo do mínimo — repor estoque</div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -97,27 +102,33 @@
                                     <div class="text-sm font-medium text-gray-900">R$ {{ number_format($item->valor_unitario, 2, ',', '.') }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($item->tipo === 'peca')
+                                        <div class="text-sm font-semibold {{ $item->estoqueCritico() ? 'text-rose-700' : ($item->estoqueBaixo() ? 'text-amber-700' : 'text-gray-900') }}">
+                                            {{ $item->quantidade_estoque }} un
+                                        </div>
+                                        <div class="text-xs text-gray-500">Mín: {{ $item->estoque_minimo }}</div>
+                                    @else
+                                        <span class="text-xs text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                         {{ $item->ativo ? 'Ativo' : 'Inativo' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    @if(auth()->user()->isAdmin())
-                                        <div class="flex items-center space-x-3">
-                                            <a href="{{ route('servicos-pecas.edit', $item) }}" 
-                                               class="text-orange-600 hover:text-orange-900 transition-colors" 
-                                               title="Editar">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <button onclick="toggleStatus({{ $item->id }}, {{ $item->ativo ? 'false' : 'true' }})" 
-                                                    class="text-{{ $item->ativo ? 'red' : 'green' }}-600 hover:text-{{ $item->ativo ? 'red' : 'green' }}-900 transition-colors" 
-                                                    title="{{ $item->ativo ? 'Desativar' : 'Ativar' }}">
-                                                <i class="fas fa-{{ $item->ativo ? 'eye-slash' : 'eye' }}"></i>
-                                            </button>
-                                        </div>
-                                    @else
-                                        <span class="text-gray-400">Sem permissão de edição</span>
-                                    @endif
+                                    <div class="flex items-center space-x-3">
+                                        <a href="{{ route('servicos-pecas.edit', $item) }}" 
+                                           class="text-orange-600 hover:text-orange-900 transition-colors" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" onclick="toggleStatus({{ $item->id }})" 
+                                                class="text-{{ $item->ativo ? 'red' : 'green' }}-600 hover:text-{{ $item->ativo ? 'red' : 'green' }}-900 transition-colors" 
+                                                title="{{ $item->ativo ? 'Desativar' : 'Ativar' }}">
+                                            <i class="fas fa-{{ $item->ativo ? 'eye-slash' : 'eye' }}"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -148,13 +159,11 @@
                 @else
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum item cadastrado</h3>
                     <p class="text-gray-500 mb-6">Comece cadastrando serviços e peças para sua oficina.</p>
-                    @if(auth()->user()->isAdmin())
-                        <a href="{{ route('servicos-pecas.create') }}" 
-                           class="inline-flex items-center px-6 py-3 btn-primary text-white rounded-lg font-medium">
-                            <i class="fas fa-plus mr-2"></i>
-                            Cadastrar Primeiro Item
-                        </a>
-                    @endif
+                    <a href="{{ route('servicos-pecas.create') }}" 
+                       class="inline-flex items-center px-6 py-3 btn-primary text-white rounded-lg font-medium">
+                        <i class="fas fa-plus mr-2"></i>
+                        Cadastrar Primeiro Item
+                    </a>
                 @endif
             </div>
         @endif
@@ -162,29 +171,29 @@
 </div>
 
 <script>
-    function toggleStatus(id, status) {
-        if (confirm('Tem certeza que deseja ' + (status ? 'ativar' : 'desativar') + ' este item?')) {
-            // Aqui você pode implementar uma requisição AJAX ou um form
-            // Por simplicidade, vamos usar um form hidden
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/servicos-pecas/${id}/toggle-status`;
-            
-            const token = document.createElement('input');
-            token.type = 'hidden';
-            token.name = '_token';
-            token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            
-            const method = document.createElement('input');
-            method.type = 'hidden';
-            method.name = '_method';
-            method.value = 'PATCH';
-            
-            form.appendChild(token);
-            form.appendChild(method);
-            document.body.appendChild(form);
-            form.submit();
+    function toggleStatus(id) {
+        if (!confirm('Tem certeza que deseja alterar o status deste item?')) {
+            return;
         }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = @json(url('/servicos-pecas')) + '/' + id + '/toggle-status';
+
+        const token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_token';
+        token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        const method = document.createElement('input');
+        method.type = 'hidden';
+        method.name = '_method';
+        method.value = 'PATCH';
+
+        form.appendChild(token);
+        form.appendChild(method);
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 @endsection

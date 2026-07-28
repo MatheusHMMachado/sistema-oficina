@@ -27,6 +27,13 @@ class Cliente extends Model
         'notificar_whatsapp',
     ];
 
+    protected $casts = [
+        'acesso_portal' => 'boolean',
+        'notificar_email' => 'boolean',
+        'notificar_whatsapp' => 'boolean',
+        'ultimo_acesso' => 'datetime',
+    ];
+
     /**
      * Salva o CPF sempre apenas com números (11 dígitos) para evitar falha na consulta do portal.
      */

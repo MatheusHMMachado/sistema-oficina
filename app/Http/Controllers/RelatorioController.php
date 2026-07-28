@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\Veiculo;
 use App\Models\ServicoPeca;
 use App\Models\ItemOrdemServico;
+use App\Support\DatabaseCompat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -35,14 +36,16 @@ class RelatorioController extends Controller
         $totalOrdens = $query->count();
         $ticketMedio = $totalOrdens > 0 ? $totalFaturamento / $totalOrdens : 0;
 
-        // Faturamento por mês
+        // Faturamento por mês (to_char no PostgreSQL / DATE_FORMAT no MySQL)
+        $mesExpr = DatabaseCompat::yearMonth('data_saida');
+
         $faturamentoPorMes = OrdemServico::where('status', 'concluida')
             ->whereBetween('data_saida', [$dataInicio, $dataFim])
             ->select(
-                DB::raw('DATE_FORMAT(data_saida, "%Y-%m") as mes'),
+                DB::raw("{$mesExpr} as mes"),
                 DB::raw('SUM(valor_total) as total')
             )
-            ->groupBy('mes')
+            ->groupBy(DB::raw($mesExpr))
             ->orderBy('mes')
             ->get();
 

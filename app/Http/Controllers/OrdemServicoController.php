@@ -8,15 +8,18 @@ use App\Models\Veiculo;
 use App\Models\ServicoPeca;
 use App\Models\ItemOrdemServico;
 use App\Models\StatusAtualizacao;
+use App\Services\EstoqueService;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use RuntimeException;
 
 class OrdemServicoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = OrdemServico::with(['cliente', 'veiculo']);
+        $query = OrdemServico::with(['cliente', 'veiculo'])
+            ->visivelPara(auth()->user());
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -38,7 +41,16 @@ class OrdemServicoController extends Controller
         $ordens = $query->latest()->paginate(15);
         $statusOptions = ['aberta', 'em_andamento', 'concluida', 'cancelada'];
 
-        return view('ordens.index', compact('ordens', 'statusOptions'));
+        $baseCounts = OrdemServico::query()->visivelPara(auth()->user());
+        $statusCounts = [
+            'aberta' => (clone $baseCounts)->where('status', 'aberta')->count(),
+            'em_andamento' => (clone $baseCounts)->where('status', 'em_andamento')->count(),
+            'concluida' => (clone $baseCounts)->where('status', 'concluida')->count(),
+            'cancelada' => (clone $baseCounts)->where('status', 'cancelada')->count(),
+            'total' => (clone $baseCounts)->count(),
+        ];
+
+        return view('ordens.index', compact('ordens', 'statusOptions', 'statusCounts'));
     }
 
     public function create()
@@ -51,29 +63,43 @@ class OrdemServicoController extends Controller
     {
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
-            'veiculo_id' => 'required|exists:veiculos,id',
+            'veiculo_id' => [
+                'required',
+                'exists:veiculos,id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request) {
+                    $pertence = Veiculo::where('id', $value)
+                        ->where('cliente_id', $request->cliente_id)
+                        ->exists();
+                    if (! $pertence) {
+                        $fail('O veículo selecionado não pertence ao cliente informado.');
+                    }
+                },
+            ],
             'data_entrada' => 'required|date',
             'km_entrada' => 'nullable|integer',
             'observacoes' => 'nullable|string',
         ]);
 
-        $ordem = OrdemServico::create($request->all());
-        
-        // Carregar relacionamentos para evitar erros na view
-        $ordem->load(['cliente', 'veiculo']);
+        try {
+            $ordem = OrdemServico::create($request->only([
+                'cliente_id', 'veiculo_id', 'data_entrada', 'km_entrada', 'observacoes',
+            ]));
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Não foi possível gerar o número da O.S. Tente novamente.');
+        }
 
         return redirect()->route('ordens.edit', $ordem)
-                         ->with('success', 'Ordem de serviço criada! Adicione os serviços e peças.');
+            ->with('success', 'Ordem de serviço criada! Adicione os serviços e peças.');
     }
 
     public function show(OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $ordem->load(['cliente', 'veiculo', 'itens.servicoPeca', 'checklist.fotos', 'statusAtualizacoes.usuario']);
-        
-        // Verificar se cliente e veículo existem (mas não bloquear, apenas mostrar mensagem na view)
-        // A view já tem verificações para exibir mensagens apropriadas
-        
-        // Adicionar pontos do veículo para o checklist
+
         $pontosVeiculo = [
             'frente_esquerda' => 'Frente Esquerda',
             'frente_direita' => 'Frente Direita',
@@ -88,22 +114,25 @@ class OrdemServicoController extends Controller
             'interior' => 'Interior',
             'motor' => 'Motor'
         ];
-        
+
         return view('ordens.show', compact('ordem', 'pontosVeiculo'));
     }
 
     public function edit(OrdemServico $ordem)
     {
-        // Carregar relacionamentos com verificação
+        $this->garantirAcessoOrdem($ordem);
+
         $ordem->load(['cliente', 'veiculo', 'itens.servicoPeca']);
 
         $servicosPecas = ServicoPeca::where('ativo', true)->orderBy('descricao')->get();
-        
+
         return view('ordens.edit', compact('ordem', 'servicosPecas'));
     }
 
     public function update(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $request->validate([
             'data_entrada' => 'required|date',
             'data_saida' => 'nullable|date',
@@ -112,7 +141,25 @@ class OrdemServicoController extends Controller
             'observacoes' => 'nullable|string',
         ]);
 
-        $ordem->update($request->all());
+        $statusAnterior = $ordem->status;
+        $novoStatus = $request->status;
+
+        try {
+            // Segurança: baixa residual (itens antigos sem baixa)
+            if ($novoStatus === 'em_andamento' && $statusAnterior !== 'em_andamento') {
+                EstoqueService::baixarPorOrdem($ordem);
+            }
+
+            if ($novoStatus === 'cancelada' && $statusAnterior !== 'cancelada') {
+                EstoqueService::restaurarPorOrdem($ordem);
+            }
+        } catch (RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        $ordem->update($request->only([
+            'data_entrada', 'data_saida', 'km_entrada', 'status', 'observacoes',
+        ]));
 
         return redirect()->route('ordens.show', $ordem)
                          ->with('success', 'Ordem de serviço atualizada com sucesso!');
@@ -120,7 +167,10 @@ class OrdemServicoController extends Controller
 
     public function destroy(OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         try {
+            EstoqueService::restaurarPorOrdem($ordem);
             $ordem->delete();
             return redirect()->route('ordens.index')
                              ->with('success', 'Ordem de serviço excluída com sucesso!');
@@ -148,6 +198,8 @@ class OrdemServicoController extends Controller
     // Adicionar item à ordem de serviço
     public function adicionarItem(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $request->validate([
             'servico_peca_id' => 'required|exists:servicos_pecas,id',
             'quantidade' => 'required|integer|min:1',
@@ -155,34 +207,60 @@ class OrdemServicoController extends Controller
 
         $servicoPeca = ServicoPeca::findOrFail($request->servico_peca_id);
 
-        ItemOrdemServico::create([
+        try {
+            EstoqueService::validarDisponibilidade($servicoPeca, (int) $request->quantidade);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $item = ItemOrdemServico::create([
             'ordem_servico_id' => $ordem->id,
             'servico_peca_id' => $request->servico_peca_id,
             'quantidade' => $request->quantidade,
             'valor_unitario' => $servicoPeca->valor_unitario,
+            'estoque_baixado' => false,
         ]);
 
-        // Recalcular valor total da ordem
+        // Baixa automática imediata ao incluir peça no orçamento / O.S.
+        if ($servicoPeca->tipo === 'peca') {
+            try {
+                EstoqueService::baixarItem($item);
+            } catch (RuntimeException $e) {
+                $item->delete();
+                $ordem->calcularValorTotal();
+
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
         $ordem->calcularValorTotal();
 
-        return back()->with('success', 'Item adicionado com sucesso!');
+        return back()->with('success', 'Item adicionado e estoque atualizado!');
     }
 
     // Remover item da ordem de serviço
     public function removerItem(ItemOrdemServico $item)
     {
         $ordem = $item->ordemServico;
+        $this->garantirAcessoOrdem($ordem);
+
+        try {
+            EstoqueService::restaurarItem($item);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
         $item->delete();
-        
-        // Recalcular valor total da ordem
         $ordem->calcularValorTotal();
-        
-        return back()->with('success', 'Item removido com sucesso!');
+
+        return back()->with('success', 'Item removido e estoque restaurado!');
     }
 
     // Atualizar status da ordem
     public function updateStatus(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         if (!$ordem->cliente) {
             return back()->with('error', 'Não é possível enviar feedback ao portal: cliente desta OS não foi encontrado.');
         }
@@ -194,15 +272,26 @@ class OrdemServicoController extends Controller
         ]);
 
         $statusAnterior = $ordem->status;
-        
-        $ordem->update(['status' => $request->status]);
+        $novoStatus = $request->status;
 
-        // Registrar atualização de status com feedback
+        try {
+            if ($novoStatus === 'em_andamento' && $statusAnterior !== 'em_andamento') {
+                EstoqueService::baixarPorOrdem($ordem);
+            }
+            if ($novoStatus === 'cancelada' && $statusAnterior !== 'cancelada') {
+                EstoqueService::restaurarPorOrdem($ordem);
+            }
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $ordem->update(['status' => $novoStatus]);
+
         StatusAtualizacao::create([
             'ordem_servico_id' => $ordem->id,
             'user_id' => Auth::id(),
             'status_anterior' => $statusAnterior,
-            'status_novo' => $request->status,
+            'status_novo' => $novoStatus,
             'mensagem' => $request->mensagem,
             'observacoes' => $request->observacoes,
             'data_atualizacao' => now()
@@ -214,6 +303,8 @@ class OrdemServicoController extends Controller
     // Adicionar atualização de status com feedback
     public function adicionarAtualizacaoStatus(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         if (!$ordem->cliente) {
             return back()->with('error', 'Não é possível enviar mensagem ao portal: cliente desta OS não foi encontrado.');
         }
@@ -239,6 +330,8 @@ class OrdemServicoController extends Controller
     // Gerar PDF da ordem de serviço
     public function gerarPdf(OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $ordem->load(['cliente', 'veiculo', 'itens.servicoPeca']);
 
         $pdf = Pdf::loadView('ordens.pdf', compact('ordem'));
@@ -260,6 +353,8 @@ class OrdemServicoController extends Controller
      */
     public function notificarCliente(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $request->validate([
             'mensagem' => 'nullable|string|max:500',
         ]);
@@ -270,10 +365,24 @@ class OrdemServicoController extends Controller
             return back()->with('error', 'Cliente não possui e-mail cadastrado.');
         }
 
-        // Aqui você pode implementar o envio de notificação
-        // Por exemplo: Mail::to($cliente->email)->send(new OrdemServicoNotificacaoMail($ordem, $request->mensagem));
-        // Ou WhatsApp, SMS, etc.
+        // Envio de e-mail ainda não está configurado no ambiente (SMTP).
+        // Não fingir sucesso para não induzir a equipe a erro.
+        return back()->with('error', 'O envio de e-mail ainda não está configurado neste servidor. Cadastre o SMTP em .env ou informe o cliente pelo WhatsApp/telefone.');
+    }
 
-        return back()->with('success', 'Cliente notificado com sucesso!');
+    /**
+     * Mecânico só acessa O.S. atribuídas a ele; admin tem acesso global.
+     */
+    private function garantirAcessoOrdem(OrdemServico $ordem): void
+    {
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if (! $ordem->atribuidaAoMecanico($user->id)) {
+            abort(403, 'Você só pode acessar ordens de serviço atribuídas a você.');
+        }
     }
 }

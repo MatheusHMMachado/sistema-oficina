@@ -15,12 +15,16 @@ class ServicoPeca extends Model
         'descricao',
         'valor_unitario',
         'tipo',
-        'ativo'
+        'ativo',
+        'quantidade_estoque',
+        'estoque_minimo',
     ];
 
     protected $casts = [
         'valor_unitario' => 'decimal:2',
-        'ativo' => 'boolean'
+        'ativo' => 'boolean',
+        'quantidade_estoque' => 'integer',
+        'estoque_minimo' => 'integer',
     ];
 
     public function itensOrdemServico()
@@ -28,15 +32,25 @@ class ServicoPeca extends Model
         return $this->hasMany(ItemOrdemServico::class);
     }
 
-    // Scope para filtrar apenas ativos
     public function scopeAtivo($query)
     {
         return $query->where('ativo', true);
     }
 
-    // Scope para filtrar por tipo
     public function scopeTipo($query, $tipo)
     {
         return $query->where('tipo', $tipo);
+    }
+
+    public function estoqueBaixo(): bool
+    {
+        return $this->tipo === 'peca'
+            && (int) $this->estoque_minimo > 0
+            && (int) $this->quantidade_estoque <= (int) $this->estoque_minimo;
+    }
+
+    public function estoqueCritico(): bool
+    {
+        return $this->tipo === 'peca' && (int) $this->quantidade_estoque <= 0;
     }
 }

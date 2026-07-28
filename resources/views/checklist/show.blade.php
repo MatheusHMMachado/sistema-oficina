@@ -61,49 +61,49 @@
                 
                 <!-- Pontos clicáveis -->
                 <!-- Frente Esquerda -->
-                <circle cx="120" cy="170" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3" 
+                <circle cx="120" cy="170" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3" 
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('frente_esquerda', 'Frente Esquerda')" />
                 <text x="120" y="175" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">FE</text>
 
                 <!-- Frente Direita -->
-                <circle cx="480" cy="170" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="480" cy="170" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('frente_direita', 'Frente Direita')" />
                 <text x="480" y="175" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">FD</text>
 
                 <!-- Lateral Esquerda -->
-                <circle cx="120" cy="200" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="120" cy="200" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('lateral_esquerda', 'Lateral Esquerda')" />
                 <text x="120" y="205" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">LE</text>
 
                 <!-- Lateral Direita -->
-                <circle cx="480" cy="200" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="480" cy="200" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('lateral_direita', 'Lateral Direita')" />
                 <text x="480" y="205" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">LD</text>
 
                 <!-- Traseira Esquerda -->
-                <circle cx="120" cy="230" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="120" cy="230" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('traseira_esquerda', 'Traseira Esquerda')" />
                 <text x="120" y="235" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">TE</text>
 
                 <!-- Traseira Direita -->
-                <circle cx="480" cy="230" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="480" cy="230" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('traseira_direita', 'Traseira Direita')" />
                 <text x="480" y="235" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">TD</text>
 
                 <!-- Capô -->
-                <circle cx="300" cy="120" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="300" cy="120" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('capot', 'Capô')" />
                 <text x="300" y="125" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">CP</text>
 
                 <!-- Teto -->
-                <circle cx="300" cy="200" r="25" fill="#FF6B35" stroke="#fff" stroke-width="3"
+                <circle cx="300" cy="200" r="25" fill="{{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35' }}" stroke="#fff" stroke-width="3"
                         class="cursor-pointer hover:fill-orange-secondary transition-colors"
                         @click="abrirModal('teto', 'Teto')" />
                 <text x="300" y="205" text-anchor="middle" fill="white" font-size="10" class="pointer-events-none">TT</text>

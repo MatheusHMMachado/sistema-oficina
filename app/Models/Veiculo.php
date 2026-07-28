@@ -22,6 +22,11 @@ class Veiculo extends Model
         'km'
     ];
 
+    public function setPlacaAttribute($value)
+    {
+        $this->attributes['placa'] = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $value));
+    }
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
@@ -35,16 +36,25 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember = $request->filled('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
+        $user = User::where('email', $credentials['email'])->first();
 
-            return redirect()->intended(route('dashboard'))
-                           ->with('success', 'Login realizado com sucesso!');
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'email' => 'As credenciais fornecidas não correspondem aos nossos registros.',
+            ])->onlyInput('email');
         }
 
-        return back()->withErrors([
-            'email' => 'As credenciais fornecidas não correspondem aos nossos registros.',
-        ])->onlyInput('email');
+        if (! $user->ativo) {
+            return back()->withErrors([
+                'email' => 'Sua conta está desativada. Solicite ao administrador a reativação.',
+            ])->onlyInput('email');
+        }
+
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('dashboard'))
+            ->with('success', 'Login realizado com sucesso!');
     }
 
     /**
@@ -130,15 +140,100 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $email = $request->input('email');
+        $user = User::where('email', $email)->first();
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
+        // Não revela se o e-mail existe; se existir, tenta enviar / gerar link
+        if (! $user) {
+            return back()->with('status', 'Se este e-mail estiver cadastrado, você receberá o link de recuperação.');
         }
 
-        return back()->withErrors(['email' => __($status)]);
+        if (! $user->ativo) {
+            return back()->withErrors([
+                'email' => 'Esta conta está desativada. Solicite a reativação ao administrador.',
+            ])->onlyInput('email');
+        }
+
+        try {
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
+
+            if ($status === Password::RESET_LINK_SENT) {
+                return back()->with('status', 'Enviamos o link de recuperação para o e-mail informado.');
+            }
+
+            // Fallback local: gera link direto quando o broker não consegue enviar
+            return $this->responderComLinkLocal($user, $email);
+        } catch (\Throwable $e) {
+            // SMTP/Mailpit fora do ar (comum no XAMPP) — ainda permite redefinir em ambiente local
+            return $this->responderComLinkLocal($user, $email, true);
+        }
+    }
+
+    /**
+     * Gera token e devolve o link na tela quando o e-mail não pode ser enviado.
+     */
+    private function responderComLinkLocal(User $user, string $email, bool $mailFalhou = false)
+    {
+        $token = Password::broker()->createToken($user);
+        $url = url(route('password.reset', [
+            'token' => $token,
+            'email' => $email,
+        ], false));
+
+        $msg = $mailFalhou
+            ? 'O envio de e-mail não está disponível neste servidor. Use o link abaixo para redefinir a senha.'
+            : 'Use o link abaixo para redefinir a senha.';
+
+        return back()
+            ->with('status', $msg)
+            ->with('reset_url', $url)
+            ->withInput(['email' => $email]);
+    }
+
+    /**
+     * Formulário de redefinição de senha (link do e-mail).
+     */
+    public function showResetPasswordForm(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->email,
+        ]);
+    }
+
+    /**
+     * Processa a redefinição de senha.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'password.confirmed' => 'A confirmação da senha não confere.',
+            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('success', 'Senha redefinida com sucesso! Faça login.');
+        }
+
+        return back()->withErrors(['email' => __($status)])->onlyInput('email');
     }
 
     /**

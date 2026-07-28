@@ -70,7 +70,7 @@
                             </label>
                             <select id="veiculo_id" 
                                     name="veiculo_id" 
-                                    required
+                                    :required="veiculos.length > 0"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent @error('veiculo_id') border-red-500 @enderror">
                                 <option value="">Selecione o veículo</option>
                                 <template x-for="veiculo in veiculos" :key="veiculo.id">
@@ -81,6 +81,13 @@
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
+                    </div>
+                </div>
+                <div class="mb-8" x-show="clienteId && veiculos.length === 0" x-cloak>
+                    <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm">
+                        Este cliente não possui veículos cadastrados.
+                        <a href="{{ route('veiculos.create') }}" class="font-semibold underline ml-1">Cadastrar veículo</a>
+                        antes de abrir a O.S.
                     </div>
                 </div>
 

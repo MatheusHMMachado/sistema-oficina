@@ -1,162 +1,66 @@
-# 🔧 COMO RESOLVER O ERRO DE BANCO DE DADOS
+# Resolver erros de banco (PostgreSQL)
 
-## ❌ ERRO ATUAL
-
-```
-SQLSTATE[HY000] [1045] Access denied for user 'root'@'localhost' (using password: NO)
-```
-
-**Causa:** O arquivo `.env` não existe ou não está configurado corretamente.
-
----
-
-## ✅ SOLUÇÃO RÁPIDA
-
-### Passo 1: Criar o arquivo .env
-
-1. Na pasta `sistema-oficina`, crie um arquivo chamado `.env`
-2. Copie o conteúdo abaixo e cole no arquivo:
+## Configuração esperada no `.env`
 
 ```env
-APP_NAME="Sistema de Oficina"
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_URL=http://localhost
-
-LOG_CHANNEL=stack
-LOG_LEVEL=debug
-
-DB_CONNECTION=mysql
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_PORT=5432
 DB_DATABASE=sistema_oficina
-DB_USERNAME=root
-DB_PASSWORD=
-
-BROADCAST_DRIVER=log
-CACHE_DRIVER=file
-FILESYSTEM_DISK=local
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-
-MAIL_MAILER=smtp
-MAIL_HOST=mailpit
-MAIL_PORT=1025
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS="hello@example.com"
-MAIL_FROM_NAME="${APP_NAME}"
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
 ```
 
-### Passo 2: Ajustar a Senha (se necessário)
+## Checklist rápido
 
-Se você configurou uma senha para o MySQL no XAMPP, altere esta linha:
+1. **PostgreSQL está rodando?** (serviço Windows / `pg_ctl status`)
+2. **`pdo_pgsql` habilitado?** → `php -m | findstr pgsql`
+3. **Banco existe?** → `psql -U postgres -c "\l"`
+4. **Senha correta** no `.env`
+5. Cache limpo: `php artisan config:clear`
 
-```env
-DB_PASSWORD=sua_senha_aqui
+## Erros comuns
+
+### `fe_sendauth: no password supplied`
+O `.env` está com `DB_PASSWORD=` vazio. No PostgreSQL a senha **é obrigatória** (não é como o MySQL do XAMPP).
+
+1. Abra `.env` e preencha a senha do usuário `postgres`:
+   ```env
+   DB_PASSWORD=sua_senha_do_postgres
+   ```
+2. Limpe o cache:
+   ```bash
+   php artisan config:clear
+   ```
+3. Teste de novo o login / `php TESTAR_CONEXAO_BANCO.php`
+
+### Connection refused
+- PostgreSQL não está iniciado ou porta diferente de 5432
+
+### password authentication failed
+- Ajuste `DB_PASSWORD` no `.env` (senha incorreta)
+
+### database "sistema_oficina" does not exist
+```bash
+psql -U postgres -c "CREATE DATABASE sistema_oficina;"
 ```
 
-Se não tem senha, deixe vazio:
+### could not find driver
+- Habilite `extension=pdo_pgsql` e `extension=pgsql` no `php.ini`
+- Reinicie Apache/PHP
 
-```env
-DB_PASSWORD=
+### Migrations falharam
+```bash
+php artisan migrate:status
+php artisan migrate:fresh --seed
 ```
+(Use `fresh` só se puder apagar os dados.)
 
-### Passo 3: Criar o Banco de Dados
-
-1. Abra o **phpMyAdmin**: http://localhost/phpmyadmin
-2. Clique em **Novo** (New) no menu lateral esquerdo
-3. Nome do banco: `sistema_oficina`
-4. Collation: `utf8mb4_unicode_ci`
-5. Clique em **Criar**
-
-### Passo 4: Gerar Chave da Aplicação
-
-Abra o terminal na pasta `sistema-oficina` e execute:
+## Testes
 
 ```bash
-php artisan key:generate
+php verificar_env.php
+php TESTAR_CONEXAO_BANCO.php
 ```
 
-### Passo 5: Executar Migrations
-
-Execute no terminal:
-
-```bash
-php artisan migrate
-```
-
-Isso criará todas as tabelas no banco de dados.
-
-### Passo 6: (Opcional) Criar Usuário Admin
-
-Execute:
-
-```bash
-php artisan db:seed --class=UserSeeder
-```
-
----
-
-## 🔍 VERIFICAÇÕES
-
-### ✅ MySQL está rodando?
-- Abra o **XAMPP Control Panel**
-- Verifique se o **MySQL** está com status "Running" (verde)
-
-### ✅ Credenciais corretas?
-- **Sem senha:** `DB_PASSWORD=` (vazio)
-- **Com senha:** `DB_PASSWORD=sua_senha`
-
-### ✅ Banco de dados existe?
-- Verifique no phpMyAdmin se o banco `sistema_oficina` existe
-- Se não existir, crie seguindo o Passo 3 acima
-
----
-
-## 📝 CONFIGURAÇÕES XAMPP PADRÃO
-
-- **Host:** `127.0.0.1` ou `localhost`
-- **Porta:** `3306`
-- **Usuário:** `root`
-- **Senha:** (geralmente vazio)
-
----
-
-## ⚠️ SE AINDA DER ERRO
-
-### Erro: "Access denied" mesmo com senha vazia
-
-Tente estas configurações no `.env`:
-
-```env
-DB_HOST=localhost
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-Ou se tiver senha:
-
-```env
-DB_HOST=localhost
-DB_USERNAME=root
-DB_PASSWORD=root
-```
-
-### Erro: "Unknown database"
-
-Certifique-se de criar o banco `sistema_oficina` no phpMyAdmin primeiro!
-
-### Erro: "Connection refused"
-
-1. Verifique se o MySQL está rodando no XAMPP
-2. Verifique se a porta 3306 está livre
-3. Tente reiniciar o MySQL no XAMPP
-
----
-
-**Após seguir estes passos, o erro deve ser resolvido!** ✅
-
+Mais detalhes: `MIGRACAO_POSTGRESQL.md` e `CONFIGURACAO_BANCO_DADOS.md`

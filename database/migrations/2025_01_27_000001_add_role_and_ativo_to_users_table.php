@@ -15,8 +15,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('funcionario')->after('email');
-            $table->boolean('ativo')->default(true)->after('role');
+            // Sem ->after(): modificador exclusivo do MySQL; PostgreSQL não suporta
+            $table->string('role')->default('funcionario');
+            $table->boolean('ativo')->default(true);
         });
 
         // Tornar o primeiro usuário admin (se existir)
@@ -35,4 +36,3 @@ return new class extends Migration
         });
     }
 };
-

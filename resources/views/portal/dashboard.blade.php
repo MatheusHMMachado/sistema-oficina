@@ -225,8 +225,8 @@
             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-calculator text-blue-600 text-2xl"></i>
             </div>
-            <h3 class="font-bold text-gray-900 mb-2">Solicitar Orçamento</h3>
-            <p class="text-sm text-gray-600">Receba um orçamento detalhado para seu veículo</p>
+            <h3 class="font-bold text-gray-900 mb-2">Ver Orçamentos</h3>
+            <p class="text-sm text-gray-600">Valores, peças e fotos das suas ordens de serviço</p>
         </div>
 
         <!-- Lembretes -->
@@ -234,8 +234,8 @@
             <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-bell text-purple-600 text-2xl"></i>
             </div>
-            <h3 class="font-bold text-gray-900 mb-2">Lembretes</h3>
-            <p class="text-sm text-gray-600">Configure lembretes de manutenção e revisão</p>
+            <h3 class="font-bold text-gray-900 mb-2">Agendar Revisão</h3>
+            <p class="text-sm text-gray-600">Agende manutenção ou revisão online</p>
         </div>
     </div>
 </div>

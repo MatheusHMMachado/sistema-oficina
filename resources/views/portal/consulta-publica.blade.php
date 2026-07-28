@@ -10,7 +10,7 @@
                 <i class="fas fa-car text-white text-3xl"></i>
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Acompanhe seu Veículo</h2>
-            <p class="mt-2 text-gray-600">Digite seu CPF para ver o andamento do serviço</p>
+            <p class="mt-2 text-gray-600">Digite CPF e placa para ver o andamento do serviço</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-8">
@@ -33,7 +33,15 @@
                            placeholder="000.000.000-00"
                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent text-lg"
                            value="{{ old('cpf') }}" autofocus>
-                    <p class="mt-2 text-sm text-gray-500">Digite apenas os números do seu CPF</p>
+                </div>
+                <div>
+                    <label for="placa" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-car mr-2 text-orange-primary"></i>Placa
+                    </label>
+                    <input type="text" id="placa" name="placa" required maxlength="8"
+                           placeholder="ABC1D23"
+                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent text-lg uppercase"
+                           value="{{ old('placa') }}">
                 </div>
 
                 <button type="submit"

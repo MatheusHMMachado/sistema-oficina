@@ -1,149 +1,56 @@
-# 🔧 CONFIGURAÇÃO DO BANCO DE DADOS
+# Configuração do banco — PostgreSQL
 
-## ❌ PROBLEMA IDENTIFICADO
+O Projeto Oficina utiliza **PostgreSQL** como banco padrão.
 
-O erro `Access denied for user 'root'@'localhost' (using password: NO)` indica que:
-
-1. O arquivo `.env` não existe ou não está configurado corretamente
-2. O Laravel está tentando conectar sem senha
-3. As credenciais do banco de dados não estão definidas
-
----
-
-## ✅ SOLUÇÃO
-
-### 1. Arquivo .env Criado
-
-O arquivo `.env` foi criado com as configurações padrão para XAMPP.
-
-### 2. Configurações Padrão do XAMPP
-
-No XAMPP, as configurações padrão são:
-- **Host:** `127.0.0.1` ou `localhost`
-- **Porta:** `3306`
-- **Usuário:** `root`
-- **Senha:** (geralmente vazio, mas pode ter senha)
-
-### 3. Ajustar Configurações
-
-Se você alterou a senha do MySQL no XAMPP, edite o arquivo `.env`:
+## Variáveis no `.env`
 
 ```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=sistema_oficina
+DB_USERNAME=postgres
 DB_PASSWORD=sua_senha_aqui
 ```
 
----
+## Pré-requisitos
 
-## 📋 PRÓXIMOS PASSOS
+1. PostgreSQL instalado e em execução (porta 5432).
+2. Extensão PHP `pdo_pgsql` habilitada (`php.ini`).
+3. Banco criado:
 
-### Passo 1: Criar o Banco de Dados
+```sql
+CREATE DATABASE sistema_oficina WITH ENCODING 'UTF8' TEMPLATE template0;
+```
 
-1. Abra o **phpMyAdmin** (http://localhost/phpmyadmin)
-2. Clique em **Novo** (New) no menu lateral
-3. Digite o nome: `sistema_oficina`
-4. Escolha o collation: `utf8mb4_unicode_ci`
-5. Clique em **Criar**
-
-### Passo 2: Gerar a Chave da Aplicação
-
-Execute no terminal (na pasta `sistema-oficina`):
+Ou via linha de comando:
 
 ```bash
-php artisan key:generate
+psql -U postgres -c "CREATE DATABASE sistema_oficina;"
 ```
 
-### Passo 3: Executar as Migrations
+## Comandos Laravel
 
-Execute no terminal:
+Na pasta `sistema-oficina`:
 
 ```bash
-php artisan migrate
+php artisan config:clear
+php artisan migrate --seed
+php artisan storage:link
 ```
 
-Isso criará todas as tabelas necessárias no banco de dados.
-
-### Passo 4: (Opcional) Popular com Dados de Teste
-
-Execute os seeders:
+## Testes rápidos
 
 ```bash
-php artisan db:seed
+php verificar_env.php
+php TESTAR_CONEXAO_BANCO.php
 ```
 
-Ou apenas o seeder de usuário:
+## Observações
 
-```bash
-php artisan db:seed --class=UserSeeder
-```
+- Booleanos (`ativo`, `acesso_portal`, etc.) usam o tipo nativo `boolean` do PostgreSQL.
+- Campos que antes eram `ENUM` no MySQL passaram a `string` (varchar), com validação na aplicação.
+- Relatórios usam `to_char(...)` no PostgreSQL (em vez de `DATE_FORMAT` do MySQL).
+- Ordenação de status nas atribuições usa `CASE ... WHEN` (em vez de `FIELD()` do MySQL).
 
----
-
-## 🔍 VERIFICAR CONFIGURAÇÃO
-
-### Se a senha do MySQL estiver configurada:
-
-Edite o arquivo `.env` e altere:
-
-```env
-DB_PASSWORD=sua_senha
-```
-
-### Se o nome do banco for diferente:
-
-Edite o arquivo `.env` e altere:
-
-```env
-DB_DATABASE=nome_do_seu_banco
-```
-
-### Se a porta for diferente:
-
-Edite o arquivo `.env` e altere:
-
-```env
-DB_PORT=3307
-```
-
----
-
-## ⚠️ PROBLEMAS COMUNS
-
-### Erro: "Access denied"
-- Verifique se a senha está correta no `.env`
-- Verifique se o MySQL está rodando no XAMPP
-- Tente deixar `DB_PASSWORD=` vazio se não configurou senha
-
-### Erro: "Unknown database"
-- Crie o banco de dados no phpMyAdmin primeiro
-- Verifique se o nome no `.env` está correto
-
-### Erro: "Connection refused"
-- Verifique se o MySQL está rodando no XAMPP
-- Verifique se a porta está correta (padrão: 3306)
-
----
-
-## 📝 ESTRUTURA DO ARQUIVO .env
-
-O arquivo `.env` contém:
-
-```env
-APP_NAME="Sistema de Oficina"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sistema_oficina
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-**Importante:** Não compartilhe o arquivo `.env` publicamente! Ele contém informações sensíveis.
-
----
-
-**Última atualização:** 2025-01-27
-
+Guia completo da migração: veja `MIGRACAO_POSTGRESQL.md`.

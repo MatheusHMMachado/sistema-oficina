@@ -50,10 +50,10 @@
                     Feedback para o Cliente
                 </h4>
                 <p class="text-sm text-gray-600 mb-4">
-                    O cliente acompanha o andamento em <strong>outro ambiente</strong> (Portal do Cliente), apenas com CPF. Use o formulário abaixo para enviar atualizações que ele verá lá.
+                    O cliente acompanha o andamento no <strong>Portal do Cliente</strong> (status, fotos e orçamento). Use o formulário abaixo para enviar atualizações.
                 </p>
                 <div class="flex flex-wrap items-center gap-4 mb-4">
-                    <a href="{{ url('/portal/consulta') }}?cpf={{ preg_replace('/[^0-9]/', '', $ordem->cliente->cpf) }}"
+                    <a href="{{ route('portal.home', ['cpf' => preg_replace('/[^0-9]/', '', $ordem->cliente->cpf)]) }}"
                        target="_blank"
                        class="inline-flex items-center px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors text-sm">
                         <i class="fas fa-external-link-alt mr-2"></i>

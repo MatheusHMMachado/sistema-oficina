@@ -9,10 +9,11 @@ return new class extends Migration
     public function up()
     {
         Schema::table('clientes', function (Blueprint $table) {
-            $table->string('email')->unique()->nullable()->after('nome');
-            $table->string('senha_portal')->nullable()->after('email');
-            $table->boolean('acesso_portal')->default(false)->after('senha_portal');
-            $table->string('token_acesso')->nullable()->after('acesso_portal');
+            // Sem ->after(): modificador exclusivo do MySQL; PostgreSQL não suporta
+            $table->string('email')->unique()->nullable();
+            $table->string('senha_portal')->nullable();
+            $table->boolean('acesso_portal')->default(false);
+            $table->string('token_acesso')->nullable();
             $table->timestamp('ultimo_acesso')->nullable();
             $table->boolean('notificar_email')->default(true);
             $table->boolean('notificar_whatsapp')->default(false);
@@ -26,4 +27,3 @@ return new class extends Migration
         });
     }
 };
-

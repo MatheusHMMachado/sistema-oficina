@@ -80,7 +80,7 @@
         </form>
 
         <div class="mt-6 pt-6 border-t border-gray-200 text-center">
-            <a href="{{ route('portal.login') }}" class="text-orange-primary hover:text-orange-secondary text-sm font-medium">
+            <a href="{{ route('portal.home', ['aba' => 'conta', 'entrar' => 1]) }}" class="text-orange-primary hover:text-orange-secondary text-sm font-medium">
                 <i class="fas fa-arrow-left mr-1"></i>Voltar ao login
             </a>
         </div>

@@ -90,7 +90,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     <img class="h-10 w-10 rounded-full" 
-                                         src="https://ui-avatars.com/api/?name={{ $funcionario->name }}&background=FF6B35&color=fff" 
+                                         src="https://ui-avatars.com/api/?name={{ urlencode($funcionario->name) }}&background={{ ltrim(($brand ?? \App\Models\ConfiguracaoSistema::atual())->cor_primaria ?? '#FF6B35', '#') }}&color=fff" 
                                          alt="">
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $funcionario->name }}</div>
@@ -165,17 +165,20 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                    <input type="text" name="telefone" id="telefone"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                           placeholder="(00) 00000-0000">
-                </div>
-
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <input type="password" name="password" id="password"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-                           placeholder="Mínimo 8 caracteres">
+                           placeholder="Mínimo 8 caracteres"
+                           autocomplete="new-password">
+                    <p id="passwordHint" class="mt-1 text-xs text-gray-500 hidden">Deixe em branco para manter a senha atual.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Senha</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                           placeholder="Repita a senha"
+                           autocomplete="new-password">
                 </div>
 
                 <div>
@@ -189,7 +192,9 @@
 
                 <div>
                     <label class="flex items-center">
-                        <input type="checkbox" name="ativo" id="ativo" checked
+                        {{-- hidden garante false quando desmarcado; value=1 evita envio de "on" --}}
+                        <input type="hidden" name="ativo" value="0">
+                        <input type="checkbox" name="ativo" id="ativo" value="1" checked
                                class="mr-2 text-orange-primary focus:ring-orange-primary">
                         <span class="text-sm font-medium text-gray-700">Usuário Ativo</span>
                     </label>
@@ -211,11 +216,26 @@
 </div>
 
 <script>
+    const funcionarioRoutes = {
+        store: @json(route('funcionarios.store')),
+        json: @json(url('/funcionarios')),
+        updateBase: @json(url('/funcionarios')),
+    };
+
     function openModalFuncionario() {
         document.getElementById('modalTitle').textContent = 'Novo Funcionário';
         document.getElementById('formFuncionario').reset();
+        document.getElementById('formFuncionario').action = funcionarioRoutes.store;
+        document.getElementById('formFuncionario').method = 'POST';
+
+        let methodInput = document.getElementById('form_method');
+        if (methodInput) methodInput.remove();
+
         document.getElementById('funcionario_id').value = '';
         document.getElementById('password').required = true;
+        document.getElementById('password_confirmation').required = true;
+        document.getElementById('passwordHint').classList.add('hidden');
+        document.getElementById('ativo').checked = true;
         document.getElementById('modalFuncionario').classList.remove('hidden');
     }
 
@@ -223,26 +243,82 @@
         document.getElementById('modalFuncionario').classList.add('hidden');
     }
 
-    function editarFuncionario(id) {
-        // Aqui você faria uma requisição AJAX para buscar os dados
-        document.getElementById('modalTitle').textContent = 'Editar Funcionário';
-        document.getElementById('funcionario_id').value = id;
-        document.getElementById('password').required = false;
-        document.getElementById('modalFuncionario').classList.remove('hidden');
+    async function editarFuncionario(id) {
+        try {
+            const res = await fetch(`${funcionarioRoutes.json}/${id}/json`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) {
+                throw new Error('Não foi possível carregar os dados do funcionário.');
+            }
+
+            const data = await res.json();
+
+            document.getElementById('modalTitle').textContent = 'Editar Funcionário';
+            document.getElementById('funcionario_id').value = data.id;
+            document.getElementById('name').value = data.name || '';
+            document.getElementById('email').value = data.email || '';
+            document.getElementById('role').value = data.role || 'funcionario';
+            document.getElementById('ativo').checked = !!data.ativo;
+            document.getElementById('password').value = '';
+            document.getElementById('password_confirmation').value = '';
+            document.getElementById('password').required = false;
+            document.getElementById('password_confirmation').required = false;
+            document.getElementById('passwordHint').classList.remove('hidden');
+
+            const form = document.getElementById('formFuncionario');
+            form.action = `${funcionarioRoutes.updateBase}/${data.id}`;
+            form.method = 'POST';
+
+            let methodInput = document.getElementById('form_method');
+            if (!methodInput) {
+                methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.id = 'form_method';
+                form.appendChild(methodInput);
+            }
+            methodInput.value = 'PUT';
+
+            document.getElementById('modalFuncionario').classList.remove('hidden');
+        } catch (e) {
+            alert(e.message || 'Erro ao abrir edição.');
+        }
     }
 
     function toggleStatus(id) {
-        if (confirm('Deseja alterar o status deste funcionário?')) {
-            // Fazer requisição AJAX
-            window.location.href = `/funcionarios/${id}/toggle-status`;
-        }
+        if (!confirm('Deseja alterar o status deste funcionário?')) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${funcionarioRoutes.updateBase}/${id}/toggle-status`;
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function deletarFuncionario(id) {
-        if (confirm('Tem certeza que deseja excluir este funcionário?')) {
-            // Fazer requisição de delete
-            window.location.href = `/funcionarios/${id}/delete`;
-        }
+        if (!confirm('Tem certeza que deseja excluir este funcionário?')) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${funcionarioRoutes.updateBase}/${id}`;
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+        form.appendChild(csrf);
+        const method = document.createElement('input');
+        method.type = 'hidden';
+        method.name = '_method';
+        method.value = 'DELETE';
+        form.appendChild(method);
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 @endsection

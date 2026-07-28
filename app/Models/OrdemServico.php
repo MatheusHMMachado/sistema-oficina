@@ -19,6 +19,7 @@ class OrdemServico extends Model
         'data_saida',
         'km_entrada',
         'status',
+        'status_pagamento',
         'observacoes',
         'valor_total'
     ];
@@ -28,6 +29,11 @@ class OrdemServico extends Model
         'data_saida' => 'date',
         'valor_total' => 'decimal:2'
     ];
+
+    public function isPago(): bool
+    {
+        return $this->status_pagamento === 'pago';
+    }
 
     public function cliente()
     {
@@ -59,6 +65,71 @@ class OrdemServico extends Model
         return $this->hasMany(AtribuicaoServico::class, 'ordem_servico_id')->latest();
     }
 
+    public function avaliacaoNps()
+    {
+        return $this->hasOne(AvaliacaoNps::class, 'ordem_servico_id');
+    }
+
+    /**
+     * Etapa amigável para o portal do cliente.
+     */
+    public function getEtapaClienteAttribute(): string
+    {
+        return match ($this->status) {
+            'aberta' => 'Na Recepção / Em Diagnóstico',
+            'em_andamento' => 'Em Execução',
+            'concluida' => 'Pronto para Retirada',
+            'cancelada' => 'Cancelada',
+            default => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
+    public function etapasPipeline(): array
+    {
+        $mapa = [
+            'aberta' => 1,
+            'em_andamento' => 3,
+            'concluida' => 5,
+            'cancelada' => 0,
+        ];
+        $atual = $mapa[$this->status] ?? 1;
+
+        return [
+            ['key' => 1, 'label' => 'Na Recepção', 'done' => $atual >= 1],
+            ['key' => 2, 'label' => 'Em Diagnóstico', 'done' => $atual >= 2 || $this->status === 'em_andamento' || $this->status === 'concluida'],
+            ['key' => 3, 'label' => 'Aguardando Peças / Em Execução', 'done' => $atual >= 3],
+            ['key' => 4, 'label' => 'Em Execução', 'done' => $atual >= 3],
+            ['key' => 5, 'label' => 'Pronto para Retirada', 'done' => $atual >= 5],
+        ];
+    }
+
+    /**
+     * Ordens com ao menos uma atribuição para o mecânico informado.
+     */
+    public function scopeAtribuidasAo($query, int $userId)
+    {
+        return $query->whereHas('atribuicoesServico', function ($q) use ($userId) {
+            $q->where('mecanico_id', $userId);
+        });
+    }
+
+    public function atribuidaAoMecanico(int $userId): bool
+    {
+        return $this->atribuicoesServico()->where('mecanico_id', $userId)->exists();
+    }
+
+    /**
+     * Admin vê tudo; mecânico só o que foi atribuído a ele.
+     */
+    public function scopeVisivelPara($query, $user)
+    {
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->atribuidasAo($user->id);
+    }
+
     // Método para gerar número da ordem automaticamente
     protected static function boot()
     {
@@ -66,9 +137,13 @@ class OrdemServico extends Model
         
         static::creating(function ($ordemServico) {
             if (!$ordemServico->numero_ordem) {
-                $ultimo = static::latest()->first();
-                $proximoNumero = $ultimo ? intval(substr($ultimo->numero_ordem, -6)) + 1 : 1;
-                $ordemServico->numero_ordem = date('Y') . str_pad($proximoNumero, 6, '0', STR_PAD_LEFT);
+                $ultimoNumero = static::query()
+                    ->where('numero_ordem', 'like', date('Y') . '%')
+                    ->orderByDesc('numero_ordem')
+                    ->value('numero_ordem');
+
+                $proximoNumero = $ultimoNumero ? ((int) substr($ultimoNumero, -6)) + 1 : 1;
+                $ordemServico->numero_ordem = date('Y') . str_pad((string) $proximoNumero, 6, '0', STR_PAD_LEFT);
             }
         });
     }

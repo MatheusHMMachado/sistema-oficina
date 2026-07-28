@@ -6,30 +6,34 @@ use App\Models\OrdemServico;
 use App\Models\Checklist;
 use App\Models\FotoChecklist;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ChecklistController extends Controller
 {
     public function index()
     {
         $ordens = OrdemServico::with(['cliente', 'veiculo'])
-                             ->whereIn('status', ['aberta', 'em_andamento'])
-                             ->get();
-        
+            ->visivelPara(auth()->user())
+            ->whereIn('status', ['aberta', 'em_andamento'])
+            ->get();
+
         return view('checklist.index', compact('ordens'));
     }
 
     public function show(OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $ordem->load(['cliente', 'veiculo', 'checklist.fotos']);
         $pontosVeiculo = Checklist::pontosVeiculo();
         $condicoes = Checklist::condicoes();
-        
+
         return view('checklist.show', compact('ordem', 'pontosVeiculo', 'condicoes'));
     }
 
     public function store(Request $request, OrdemServico $ordem)
     {
+        $this->garantirAcessoOrdem($ordem);
+
         $request->validate([
             'ponto_veiculo' => 'required|string',
             'condicao' => 'required|string',
@@ -53,19 +57,13 @@ class ChecklistController extends Controller
             ]
         );
 
-        // Processar fotos
         if ($request->hasFile('fotos')) {
             $pastaDestino = 'checklist/' . $ordem->numero_ordem;
-            
+
             foreach ($request->file('fotos') as $foto) {
                 if ($foto->isValid()) {
-                    // Gerar nome único para o arquivo
                     $nomeArquivo = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
-                    
-                    // Salvar no storage/public/checklist/numero_ordem/
                     $caminhoSalvo = $foto->storeAs($pastaDestino, $nomeArquivo, 'public');
-                    
-                    // Salvar caminho relativo (sem 'public/') no banco
                     $caminhoRelativo = str_replace('public/', '', $caminhoSalvo);
 
                     FotoChecklist::create([
@@ -78,5 +76,51 @@ class ChecklistController extends Controller
         }
 
         return back()->with('success', 'Checklist atualizado com sucesso!');
+    }
+
+    public function destroy(Checklist $checklist)
+    {
+        $ordem = $checklist->ordemServico;
+        if ($ordem) {
+            $this->garantirAcessoOrdem($ordem);
+        } elseif (! auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        $checklist->load('fotos');
+        foreach ($checklist->fotos as $foto) {
+            $foto->delete(); // dispara remoção do arquivo no model
+        }
+        $checklist->delete();
+
+        return back()->with('success', 'Item do checklist removido com sucesso.');
+    }
+
+    public function destroyFoto(FotoChecklist $foto)
+    {
+        $checklist = $foto->checklist;
+        $ordem = $checklist?->ordemServico;
+        if ($ordem) {
+            $this->garantirAcessoOrdem($ordem);
+        } elseif (! auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        $foto->delete();
+
+        return back()->with('success', 'Foto removida com sucesso.');
+    }
+
+    private function garantirAcessoOrdem(OrdemServico $ordem): void
+    {
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if (! $ordem->atribuidaAoMecanico($user->id)) {
+            abort(403, 'Você só pode acessar checklists de ordens atribuídas a você.');
+        }
     }
 }

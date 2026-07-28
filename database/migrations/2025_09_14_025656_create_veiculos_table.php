@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('chassi')->nullable();
             $table->integer('km')->default(0);
             $table->timestamps();
+
+            $table->index('placa');
+            $table->index('cliente_id');
         });
     }
 

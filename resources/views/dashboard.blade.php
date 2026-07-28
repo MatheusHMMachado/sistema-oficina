@@ -6,18 +6,16 @@
 @section('content')
 <div class="space-y-8">
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 {{ !empty($dados['is_admin']) ? 'lg:grid-cols-4' : 'lg:grid-cols-3' }} gap-6">
         <!-- Total Clientes -->
-        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-orange-primary group cursor-pointer">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-orange-primary to-orange-secondary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-users text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Clientes</p>
-                        <p class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{{ number_format($dados['total_clientes']) }}</p>
-                    </div>
+        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-orange-primary group cursor-pointer overflow-hidden">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-14 h-14 shrink-0 bg-gradient-to-br from-orange-primary to-orange-secondary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Clientes</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ number_format($dados['total_clientes'] ?? 0) }}</p>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100">
@@ -29,16 +27,14 @@
         </div>
 
         <!-- Total Veículos -->
-        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-blue-500 group cursor-pointer">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-car text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Veículos</p>
-                        <p class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{{ number_format($dados['total_veiculos']) }}</p>
-                    </div>
+        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-blue-500 group cursor-pointer overflow-hidden">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-14 h-14 shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-car text-white text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Veículos</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ number_format($dados['total_veiculos'] ?? 0) }}</p>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100">
@@ -50,16 +46,14 @@
         </div>
 
         <!-- Ordens Abertas -->
-        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-yellow-500 group cursor-pointer">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-clock text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ordens Abertas</p>
-                        <p class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{{ number_format($dados['ordens_abertas']) }}</p>
-                    </div>
+        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-yellow-500 group cursor-pointer overflow-hidden">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-14 h-14 shrink-0 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-clock text-white text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ordens Abertas</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{{ number_format($dados['ordens_abertas'] ?? 0) }}</p>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100">
@@ -70,26 +64,29 @@
             </div>
         </div>
 
-        <!-- Faturamento do Mês -->
-        <div class="card-modern rounded-2xl shadow-xl p-6 border-l-4 border-green-500 group cursor-pointer">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-dollar-sign text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Faturamento Mês</p>
-                        <p class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">R$ {{ number_format($dados['faturamento_mes'], 2, ',', '.') }}</p>
-                    </div>
+        @if(!empty($dados['is_admin']))
+        <!-- Faturamento do Mês (somente admin) -->
+        <div class="card-modern rounded-2xl shadow-xl p-5 sm:p-6 border-l-4 border-green-500 group cursor-pointer overflow-hidden">
+            <div class="flex items-start gap-3 min-w-0">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-dollar-sign text-white text-base sm:text-lg"></i>
+                </div>
+                <div class="min-w-0 flex-1 overflow-hidden">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Faturamento Mês</p>
+                    <p class="text-sm sm:text-base md:text-lg font-bold text-gray-900 leading-snug tabular-nums break-all"
+                       title="R$ {{ number_format((float) ($dados['faturamento_mes'] ?? 0), 2, ',', '.') }}">
+                        R$ {{ number_format((float) ($dados['faturamento_mes'] ?? 0), 2, ',', '.') }}
+                    </p>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 flex items-center">
                     <i class="fas fa-chart-line text-green-500 mr-1"></i>
-                    <span class="text-green-600 font-semibold">Este mês</span>
+                    <span class="text-green-600 font-semibold">Competência {{ now()->format('m/Y') }}</span>
                 </p>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Ações Rápidas -->

@@ -375,13 +375,13 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <a href="{{ route('portal.consulta-publica') }}" 
+                    <a href="{{ route('portal.home') }}" 
                        target="_blank"
                        class="inline-flex items-center px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-secondary transition-colors">
                         <i class="fas fa-external-link-alt mr-2"></i>
-                        Abrir Portal de Consulta
+                        Abrir Portal do Cliente
                     </a>
-                    <a href="{{ route('portal.consulta-publica') }}?cpf={{ preg_replace('/[^0-9]/', '', $cliente->cpf) }}" 
+                    <a href="{{ route('portal.home', ['cpf' => preg_replace('/[^0-9]/', '', $cliente->cpf)]) }}" 
                        target="_blank"
                        class="inline-flex items-center px-4 py-2 bg-white border-2 border-orange-primary text-orange-primary rounded-lg hover:bg-orange-50 transition-colors">
                         <i class="fas fa-eye mr-2"></i>
@@ -393,10 +393,11 @@
                     <div class="flex items-start text-sm text-gray-600">
                         <i class="fas fa-shield-alt text-green-500 mr-2 mt-1"></i>
                         <div>
-                            <p class="font-medium mb-1">Segurança e Privacidade:</p>
+                            <p class="font-medium mb-1">Portal único:</p>
                             <ul class="list-disc list-inside space-y-1 text-gray-500">
-                                <li>O acesso é feito apenas com CPF (sem necessidade de senha)</li>
-                                <li>O cliente vê apenas suas próprias ordens de serviço</li>
+                                <li>Consulta rápida por CPF (status, fotos e orçamento)</li>
+                                <li>Conta com senha para agendar e ver histórico completo</li>
+                                <li>O cliente vê apenas as próprias ordens de serviço</li>
                                 <li>As atualizações são exibidas em tempo real</li>
                             </ul>
                         </div>

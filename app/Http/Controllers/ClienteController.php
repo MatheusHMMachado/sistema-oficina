@@ -32,19 +32,36 @@ class ClienteController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizarDadosCliente($request);
+
         $request->validate([
             'nome' => 'required|string|max:255',
-            'cpf' => 'required|string|unique:clientes,cpf',
+            'cpf' => [
+                'required',
+                'string',
+                'size:11',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if (Cliente::buscarPorCpf((string) $value)) {
+                        $fail('Este CPF já está cadastrado.');
+                    }
+                },
+            ],
             'rg' => 'nullable|string|max:20',
             'endereco' => 'nullable|string',
-            'telefone' => 'nullable|string|max:15',
-            'celular' => 'nullable|string|max:15',
+            'telefone' => 'nullable|string|max:20',
+            'celular' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:clientes,email',
+        ], [
+            'cpf.size' => 'O CPF deve conter 11 dígitos.',
+            'email.unique' => 'Este e-mail já está cadastrado.',
         ]);
 
-        Cliente::create($request->all());
+        Cliente::create($request->only([
+            'nome', 'cpf', 'rg', 'endereco', 'telefone', 'celular', 'email',
+        ]));
 
         return redirect()->route('clientes.index')
-                         ->with('success', 'Cliente cadastrado com sucesso!');
+            ->with('success', 'Cliente cadastrado com sucesso!');
     }
 
     public function show(Cliente $cliente)
@@ -53,7 +70,7 @@ class ClienteController extends Controller
             'veiculos',
             'ordensServico' => fn ($q) => $q->with(['veiculo', 'statusAtualizacoes'])->orderByDesc('created_at'),
         ]);
-        
+
         return view('clientes.show', compact('cliente'));
     }
 
@@ -64,19 +81,48 @@ class ClienteController extends Controller
 
     public function update(Request $request, Cliente $cliente)
     {
+        $this->normalizarDadosCliente($request);
+
         $request->validate([
             'nome' => 'required|string|max:255',
-            'cpf' => 'required|string|unique:clientes,cpf,' . $cliente->id,
+            'cpf' => [
+                'required',
+                'string',
+                'size:11',
+                function (string $attribute, mixed $value, \Closure $fail) use ($cliente) {
+                    $existente = Cliente::buscarPorCpf((string) $value);
+                    if ($existente && $existente->id !== $cliente->id) {
+                        $fail('Este CPF já está cadastrado.');
+                    }
+                },
+            ],
             'rg' => 'nullable|string|max:20',
             'endereco' => 'nullable|string',
-            'telefone' => 'nullable|string|max:15',
-            'celular' => 'nullable|string|max:15',
+            'telefone' => 'nullable|string|max:20',
+            'celular' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:clientes,email,' . $cliente->id,
+        ], [
+            'cpf.size' => 'O CPF deve conter 11 dígitos.',
+            'email.unique' => 'Este e-mail já está cadastrado.',
         ]);
 
-        $cliente->update($request->all());
+        $cliente->update($request->only([
+            'nome', 'cpf', 'rg', 'endereco', 'telefone', 'celular', 'email',
+        ]));
 
-        return redirect()->route('clientes.index')
-                         ->with('success', 'Cliente atualizado com sucesso!');
+        return redirect()->route('clientes.show', $cliente)
+            ->with('success', 'Cliente atualizado com sucesso!');
+    }
+
+    /**
+     * Remove máscara do CPF e normaliza e-mail vazio para null (unique no banco).
+     */
+    private function normalizarDadosCliente(Request $request): void
+    {
+        $request->merge([
+            'cpf' => preg_replace('/[^0-9]/', '', (string) $request->input('cpf', '')),
+            'email' => $request->filled('email') ? trim((string) $request->input('email')) : null,
+        ]);
     }
 
     public function destroy(Cliente $cliente)
@@ -145,10 +191,7 @@ class ClienteController extends Controller
             $cliente->refresh();
         }
 
-        // Aqui você pode implementar o envio de e-mail com as credenciais
-        // Por enquanto, apenas retornamos sucesso
-        // Exemplo: Mail::to($cliente->email)->send(new PortalAcessoMail($cliente));
-
-        return back()->with('success', 'Credenciais de acesso enviadas com sucesso!');
+        // Envio de e-mail ainda não está configurado no ambiente (SMTP).
+        return back()->with('error', 'O envio de e-mail ainda não está configurado neste servidor. Ative o SMTP ou compartilhe o link do portal manualmente com o cliente.');
     }
 }

@@ -15,6 +15,10 @@ use App\Http\Controllers\PortalClienteController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\AtribuicaoServicoController;
+use App\Http\Controllers\FinanceiroController;
+use App\Http\Controllers\AiCopilotoController;
+use App\Http\Controllers\TemaController;
+use App\Http\Controllers\AgendamentoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,26 +27,29 @@ use App\Http\Controllers\AtribuicaoServicoController;
 */
 
 Route::prefix('portal')->group(function () {
-    // Consulta Pública por CPF (sem autenticação)
+    // Entrada única do Portal do Cliente
+    Route::get('/', [PortalClienteController::class, 'home'])->name('portal.home');
+
+    // Compatibilidade: consulta e login apontam para o mesmo portal
     Route::get('/consulta', [PortalClienteController::class, 'consultaPublica'])->name('portal.consulta-publica');
     Route::post('/consulta', [PortalClienteController::class, 'processarConsulta']);
     Route::get('/ordem/{id}/detalhes', [PortalClienteController::class, 'verOrdemPublica'])->name('portal.ordem.publica');
+
+    // Agendamento público (com ou sem cadastro)
+    Route::get('/agendar', [PortalClienteController::class, 'agendarServico'])->name('portal.agendar');
+    Route::post('/agendar', [PortalClienteController::class, 'salvarAgendamento']);
     
-    // Login do Portal
     Route::get('/login', [PortalClienteController::class, 'showLogin'])->name('portal.login');
     Route::post('/login', [PortalClienteController::class, 'login']);
     
-    // Primeiro Acesso
     Route::get('/primeiro-acesso', [PortalClienteController::class, 'primeiroAcesso'])->name('portal.primeiro-acesso');
     Route::post('/primeiro-acesso', [PortalClienteController::class, 'salvarPrimeiroAcesso']);
     
-    // Rotas protegidas do portal (requerem login do cliente)
     Route::middleware(['portal.auth'])->group(function () {
         Route::get('/dashboard', [PortalClienteController::class, 'dashboard'])->name('portal.dashboard');
         Route::get('/veiculo/{id}/historico', [PortalClienteController::class, 'historicoVeiculo'])->name('portal.veiculo.historico');
         Route::get('/ordem/{id}', [PortalClienteController::class, 'verOrdem'])->name('portal.ordem.detalhes');
-        Route::get('/agendar', [PortalClienteController::class, 'agendarServico'])->name('portal.agendar');
-        Route::post('/agendar', [PortalClienteController::class, 'salvarAgendamento']);
+        Route::post('/ordem/{id}/avaliacao', [PortalClienteController::class, 'salvarAvaliacao'])->name('portal.avaliacao');
         Route::get('/orcamento', [PortalClienteController::class, 'orcamento'])->name('portal.orcamento');
         Route::post('/orcamento', [PortalClienteController::class, 'enviarOrcamento']);
         Route::get('/lembretes', [PortalClienteController::class, 'lembretes'])->name('portal.lembretes');
@@ -51,7 +58,6 @@ Route::prefix('portal')->group(function () {
         Route::post('/logout', [PortalClienteController::class, 'logout'])->name('portal.logout');
     });
     
-    // QR Code de acesso rápido
     Route::get('/qr/{token}', [PortalClienteController::class, 'acessoQR'])->name('portal.cliente.qr');
 });
 
@@ -68,6 +74,8 @@ Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
 // Redirecionar raiz
 Route::get('/', function () {
@@ -87,6 +95,10 @@ Route::middleware(['auth', 'checkActive'])->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Copiloto de IA (chat flutuante)
+    Route::get('/copiloto/status', [AiCopilotoController::class, 'status'])->name('copiloto.status');
+    Route::post('/copiloto/chat', [AiCopilotoController::class, 'chat'])->name('copiloto.chat');
     
     // GESTÃO DE CLIENTES
     Route::resource('clientes', ClienteController::class);
@@ -109,30 +121,53 @@ Route::middleware(['auth', 'checkActive'])->group(function () {
     Route::post('/ordens/{ordem}/notificar-cliente', [OrdemServicoController::class, 'notificarCliente'])->name('ordens.notificar-cliente');
     
     // GESTÃO DE SERVIÇOS E PEÇAS
-    Route::resource('servicos-pecas', ServicoPecaController::class);
+    Route::resource('servicos-pecas', ServicoPecaController::class)->parameters([
+        'servicos-pecas' => 'servicoPeca',
+    ]);
     Route::patch('/servicos-pecas/{servicoPeca}/toggle-status', [ServicoPecaController::class, 'toggleStatus'])->name('servicos-pecas.toggle-status');
 
-    // ATRIBUIÇÕES DE SERVIÇO (admin define; mecânico registra progresso)
-    Route::get('/atribuicoes', [AtribuicaoServicoController::class, 'index'])->name('atribuicoes.index');
-    Route::post('/atribuicoes', [AtribuicaoServicoController::class, 'store'])->name('atribuicoes.store');
-    Route::patch('/atribuicoes/{atribuicao}/progresso', [AtribuicaoServicoController::class, 'atualizarProgresso'])->name('atribuicoes.progresso');
-    
     // CHECKLIST
     Route::get('/checklist', [ChecklistController::class, 'index'])->name('checklist.index');
     Route::get('/checklist/{ordem}', [ChecklistController::class, 'show'])->name('checklist.show');
     Route::post('/checklist/{ordem}', [ChecklistController::class, 'store'])->name('checklist.store');
     Route::delete('/checklist/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
     Route::delete('/checklist-foto/{foto}', [ChecklistController::class, 'destroyFoto'])->name('checklist.foto.destroy');
-    
-    // GESTÃO DE FUNCIONÁRIOS (APENAS ADMIN)
+
+    // ATRIBUIÇÕES — admin cria/exclui/aprova; mecânico visualiza e atualiza as próprias
+    Route::get('/atribuicoes', [AtribuicaoServicoController::class, 'index'])->name('atribuicoes.index');
+    Route::patch('/atribuicoes/{atribuicao}/progresso', [AtribuicaoServicoController::class, 'atualizarProgresso'])->name('atribuicoes.progresso');
+
     Route::middleware(['admin'])->group(function () {
+        Route::get('/configuracoes/tema', [TemaController::class, 'edit'])->name('configuracoes.tema');
+        Route::put('/configuracoes/tema', [TemaController::class, 'update'])->name('configuracoes.tema.update');
+
+        Route::get('/agendamentos', [AgendamentoController::class, 'index'])->name('agendamentos.index');
+        Route::get('/agendamentos/carga-mecanicos', [AgendamentoController::class, 'cargaMecanicos'])->name('agendamentos.carga-mecanicos');
+        Route::post('/agendamentos/{agendamento}/status', [AgendamentoController::class, 'atualizarStatus'])->name('agendamentos.status');
+
+        Route::post('/atribuicoes', [AtribuicaoServicoController::class, 'store'])->name('atribuicoes.store');
+        Route::delete('/atribuicoes/{atribuicao}', [AtribuicaoServicoController::class, 'destroy'])->name('atribuicoes.destroy');
+        Route::post('/atribuicoes/{atribuicao}/reagendar/aprovar', [AtribuicaoServicoController::class, 'aprovarReagendamento'])->name('atribuicoes.reagendar.aprovar');
+        Route::post('/atribuicoes/{atribuicao}/reagendar/recusar', [AtribuicaoServicoController::class, 'recusarReagendamento'])->name('atribuicoes.reagendar.recusar');
+
         Route::get('/funcionarios', [FuncionarioController::class, 'index'])->name('funcionarios.index');
         Route::post('/funcionarios', [FuncionarioController::class, 'store'])->name('funcionarios.store');
         Route::get('/funcionarios/{id}/edit', [FuncionarioController::class, 'edit'])->name('funcionarios.edit');
+        Route::get('/funcionarios/{id}/json', [FuncionarioController::class, 'showJson'])->name('funcionarios.json');
         Route::put('/funcionarios/{id}', [FuncionarioController::class, 'update'])->name('funcionarios.update');
-        Route::get('/funcionarios/{id}/toggle-status', [FuncionarioController::class, 'toggleStatus'])->name('funcionarios.toggle-status');
-        Route::get('/funcionarios/{id}/delete', [FuncionarioController::class, 'destroy'])->name('funcionarios.destroy');
+        Route::post('/funcionarios/{id}/toggle-status', [FuncionarioController::class, 'toggleStatus'])->name('funcionarios.toggle-status');
+        Route::delete('/funcionarios/{id}', [FuncionarioController::class, 'destroy'])->name('funcionarios.destroy');
+        // Compatibilidade com links antigos (GET)
+        Route::get('/funcionarios/{id}/toggle-status', [FuncionarioController::class, 'toggleStatus']);
+        Route::get('/funcionarios/{id}/delete', [FuncionarioController::class, 'destroy']);
         
+        // Controle Financeiro
+        Route::get('/financeiro', [FinanceiroController::class, 'index'])->name('financeiro.index');
+        Route::get('/financeiro/relatorio-mensal', [FinanceiroController::class, 'relatorioMensalPdf'])->name('financeiro.relatorio-mensal');
+        Route::post('/financeiro/despesas', [FinanceiroController::class, 'storeDespesa'])->name('financeiro.despesas.store');
+        Route::delete('/financeiro/despesas/{despesa}', [FinanceiroController::class, 'destroyDespesa'])->name('financeiro.despesas.destroy');
+        Route::patch('/financeiro/ordens/{ordem}/pagamento', [FinanceiroController::class, 'atualizarPagamento'])->name('financeiro.pagamento');
+
         // Relatórios
         Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
         Route::get('/relatorios/financeiro', [RelatorioController::class, 'financeiro'])->name('relatorios.financeiro');
@@ -146,4 +181,5 @@ Route::middleware(['auth', 'checkActive'])->group(function () {
     // Notificações
     Route::get('/notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');
     Route::post('/notificacoes/{id}/marcar-lida', [NotificacaoController::class, 'marcarLida'])->name('notificacoes.marcar-lida');
+    Route::post('/notificacoes/marcar-todas', [NotificacaoController::class, 'marcarTodasLidas'])->name('notificacoes.marcar-todas');
 });

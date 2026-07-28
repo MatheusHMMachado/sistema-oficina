@@ -60,29 +60,36 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Status Atual</h3>
                 <span class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold
                     {{ $ordem->status === 'aberta' ? 'bg-yellow-100 text-yellow-800' :
                        ($ordem->status === 'em_andamento' ? 'bg-orange-100 text-orange-800' :
                        ($ordem->status === 'concluida' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')) }}">
-                    @if($ordem->status === 'aberta')
-                        <i class="fas fa-folder-open mr-2"></i> Aberta
-                    @elseif($ordem->status === 'em_andamento')
-                        <i class="fas fa-cog fa-spin mr-2"></i> Em Andamento
-                    @elseif($ordem->status === 'concluida')
-                        <i class="fas fa-check-circle mr-2"></i> Concluída
-                    @else
-                        <i class="fas fa-times-circle mr-2"></i> Cancelada
-                    @endif
+                    {{ $ordem->etapa_cliente }}
                 </span>
             </div>
             <div class="text-right">
-                <p class="text-sm text-gray-500">Valor Total</p>
+                <p class="text-sm text-gray-600">Valor Total</p>
                 <p class="text-2xl font-bold text-orange-primary">R$ {{ number_format($ordem->valor_total, 2, ',', '.') }}</p>
             </div>
         </div>
+
+        @if($ordem->status !== 'cancelada')
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-2">
+                @foreach($ordem->etapasPipeline() as $etapa)
+                    <div class="text-center p-2 rounded-lg border {{ $etapa['done'] ? 'bg-orange-50 border-orange-primary' : 'bg-gray-50 border-gray-200' }}">
+                        <div class="w-7 h-7 mx-auto mb-1 rounded-full flex items-center justify-center text-xs font-bold
+                            {{ $etapa['done'] ? 'text-white' : 'bg-gray-200 text-gray-500' }}"
+                             @if($etapa['done']) style="background: var(--brand-primary)" @endif>
+                            @if($etapa['done'])<i class="fas fa-check"></i>@else{{ $etapa['key'] }}@endif
+                        </div>
+                        <p class="text-[11px] leading-tight {{ $etapa['done'] ? 'text-gray-900 font-semibold' : 'text-gray-400' }}">{{ $etapa['label'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     @if($ordem->veiculo)
@@ -288,6 +295,36 @@
                 <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>Observações
             </h3>
             <p class="text-gray-700 bg-yellow-50 p-4 rounded-lg">{{ $ordem->observacoes }}</p>
+        </div>
+    @endif
+
+    @if($ordem->status === 'concluida' && session('cliente_id'))
+        <div id="avaliacao" class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                <i class="fas fa-star text-amber-400 mr-2"></i>Avaliação do Serviço (NPS)
+            </h3>
+            @if($ordem->avaliacaoNps)
+                <p class="text-gray-700">Você avaliou com nota <strong>{{ $ordem->avaliacaoNps->nota }}/10</strong>.</p>
+                @if($ordem->avaliacaoNps->comentario)
+                    <p class="text-sm text-gray-500 mt-2">"{{ $ordem->avaliacaoNps->comentario }}"</p>
+                @endif
+            @else
+                <p class="text-sm text-gray-600 mb-4">De 0 a 10, o quanto você recomendaria nossa oficina?</p>
+                <form method="POST" action="{{ route('portal.avaliacao', $ordem->id) }}" class="space-y-3" x-data="{ nota: null }">
+                    @csrf
+                    <div class="flex flex-wrap gap-2">
+                        @for($i = 0; $i <= 10; $i++)
+                            <label class="cursor-pointer">
+                                <input type="radio" name="nota" value="{{ $i }}" class="sr-only" x-model="nota" required>
+                                <span class="inline-flex w-9 h-9 items-center justify-center rounded-lg border text-sm font-semibold"
+                                      :style="nota == {{ $i }} ? 'background: var(--brand-primary); color: #fff; border-color: transparent' : ''">{{ $i }}</span>
+                            </label>
+                        @endfor
+                    </div>
+                    <textarea name="comentario" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Comentário opcional"></textarea>
+                    <button type="submit" class="px-5 py-2 btn-primary text-white rounded-lg text-sm font-medium">Enviar avaliação</button>
+                </form>
+            @endif
         </div>
     @endif
 </div>

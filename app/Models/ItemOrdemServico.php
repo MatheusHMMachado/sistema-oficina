@@ -16,12 +16,14 @@ class ItemOrdemServico extends Model
         'servico_peca_id',
         'quantidade',
         'valor_unitario',
-        'valor_total'
+        'valor_total',
+        'estoque_baixado',
     ];
 
     protected $casts = [
         'valor_unitario' => 'decimal:2',
-        'valor_total' => 'decimal:2'
+        'valor_total' => 'decimal:2',
+        'estoque_baixado' => 'boolean',
     ];
 
     public function ordemServico()

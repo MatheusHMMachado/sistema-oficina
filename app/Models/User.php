@@ -60,4 +60,9 @@ class User extends Authenticatable
     {
         return $this->role === 'admin' || $this->id === 1;
     }
+
+    public function isMecanico(): bool
+    {
+        return ! $this->isAdmin();
+    }
 }

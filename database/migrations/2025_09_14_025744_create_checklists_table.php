@@ -11,23 +11,13 @@ return new class extends Migration
         Schema::create('checklists', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ordem_servico_id')->constrained('ordens_servico');
-            $table->enum('ponto_veiculo', [
-                'frente_esquerda',
-                'frente_direita',
-                'lateral_esquerda',
-                'lateral_direita',
-                'traseira_esquerda',
-                'traseira_direita',
-                'capot',
-                'teto',
-                'para_brisa',
-                'vidro_traseiro',
-                'interior',
-                'motor'
-            ]);
+            // string em vez de enum nativo MySQL — compatível com PostgreSQL
+            $table->string('ponto_veiculo', 40);
             $table->text('observacao')->nullable();
-            $table->enum('condicao', ['otimo', 'bom', 'regular', 'ruim', 'pessimo']);
+            $table->string('condicao', 20);
             $table->timestamps();
+
+            $table->index(['ordem_servico_id', 'ponto_veiculo']);
         });
     }
 

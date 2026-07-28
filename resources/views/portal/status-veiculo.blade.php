@@ -15,9 +15,9 @@
                     <p class="text-gray-600">CPF: {{ $cliente->cpf_formatado }}</p>
                 </div>
             </div>
-            <a href="{{ route('portal.consulta-publica') }}"
+            <a href="{{ route('portal.home') }}"
                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Nova Consulta
+                <i class="fas fa-arrow-left mr-2"></i>Voltar ao Portal
             </a>
         </div>
     </div>

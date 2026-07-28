@@ -126,7 +126,7 @@
                                            title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ route('portal.consulta-publica') }}?cpf={{ preg_replace('/[^0-9]/', '', $cliente->cpf) }}" 
+                                        <a href="{{ route('portal.home', ['cpf' => preg_replace('/[^0-9]/', '', $cliente->cpf)]) }}" 
                                            target="_blank"
                                            class="text-green-600 hover:text-green-900 transition-colors" 
                                            title="Ver Portal do Cliente">

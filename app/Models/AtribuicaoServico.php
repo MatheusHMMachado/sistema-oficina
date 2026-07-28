@@ -11,6 +11,14 @@ class AtribuicaoServico extends Model
 
     protected $table = 'atribuicoes_servico';
 
+    public const STATUS = [
+        'pendente' => 'Pendente',
+        'em_andamento' => 'Em Andamento',
+        'paralisado' => 'Paralisado',
+        'excedido' => 'Excedido no Prazo',
+        'concluido' => 'Concluído',
+    ];
+
     protected $fillable = [
         'ordem_servico_id',
         'servico_peca_id',
@@ -24,13 +32,18 @@ class AtribuicaoServico extends Model
         'observacao_mecanico',
         'motivo_nao_conclusao',
         'novo_prazo',
+        'reagendamento_status',
+        'alerta_prazo_em',
+        'reagendamento_respondido_em',
         'concluido_em',
     ];
 
     protected $casts = [
-        'prazo' => 'date',
-        'novo_prazo' => 'date',
+        'prazo' => 'datetime',
+        'novo_prazo' => 'datetime',
         'concluido_em' => 'datetime',
+        'alerta_prazo_em' => 'datetime',
+        'reagendamento_respondido_em' => 'datetime',
     ];
 
     public function ordemServico()
@@ -51,5 +64,15 @@ class AtribuicaoServico extends Model
     public function atribuidoPor()
     {
         return $this->belongsTo(User::class, 'atribuido_por');
+    }
+
+    public function isExcedido(): bool
+    {
+        return $this->status === 'excedido' || ($this->prazo && $this->prazo->isPast() && $this->status !== 'concluido');
+    }
+
+    public function temReagendamentoPendente(): bool
+    {
+        return $this->reagendamento_status === 'pendente';
     }
 }
