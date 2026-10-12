@@ -5,18 +5,34 @@
     $isDark = ($brand->tema ?? 'light') === 'dark';
 @endphp
 <script>
-    tailwind.config = {
-        darkMode: 'class',
-        theme: {
-            extend: {
-                colors: {
-                    'orange-primary': '{{ $primary }}',
-                    'orange-secondary': '{{ $secondary }}',
-                    'black-primary': '#1A1A1A',
-                    'gray-dark': '#2D2D2D'
+    function applyTailwindBrandConfig() {
+        if (typeof tailwind === 'undefined') {
+            return false;
+        }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'orange-primary': @json($primary),
+                        'orange-secondary': @json($secondary),
+                        'black-primary': '#1A1A1A',
+                        'gray-dark': '#2D2D2D'
+                    }
                 }
             }
-        }
+        };
+        return true;
+    }
+    if (!applyTailwindBrandConfig()) {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!applyTailwindBrandConfig()) {
+                var s = document.querySelector('script[src*="tailwindcss"]');
+                if (s) {
+                    s.addEventListener('load', applyTailwindBrandConfig);
+                }
+            }
+        });
     }
 </script>
 <style>

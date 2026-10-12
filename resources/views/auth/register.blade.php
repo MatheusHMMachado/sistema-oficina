@@ -6,27 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Registro - Sistema de Oficina</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Configuração personalizada do Tailwind -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'orange-primary': '#FF6B35',
-                        'orange-secondary': '#FF8C42',
-                        'black-primary': '#1A1A1A',
-                        'gray-dark': '#2D2D2D'
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @include('partials.head-assets')
     
     <style>
         body {

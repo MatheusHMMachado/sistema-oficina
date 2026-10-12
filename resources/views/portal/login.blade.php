@@ -8,24 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal do Cliente - Sistema Oficina</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Configuração de cores -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'orange-primary': '#FF6B35',
-                        'orange-secondary': '#FF8C42',
-                        'black-primary': '#1A1A1A',
-                        'gray-dark': '#2D2D2D'
-                    }
-                }
-            }
-        }
-    </script>
+    @include('partials.head-assets')
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

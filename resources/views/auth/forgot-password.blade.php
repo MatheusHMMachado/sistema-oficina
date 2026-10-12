@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Recuperar Senha - {{ ($brand ?? \App\Models\ConfiguracaoSistema::atual())->nome_empresa }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    @include('partials.brand-theme')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @include('partials.head-assets')
     <style>
         body.login-page {
             min-height: 100vh;
