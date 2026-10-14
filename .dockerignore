@@ -1,0 +1,46 @@
+# === Git ===
+.git
+.gitignore
+.gitattributes
+
+# === Dependências (serão instaladas no build) ===
+node_modules
+vendor
+
+# === Ambiente ===
+.env
+.env.*
+!.env.example
+
+# === Docker (não precisa dentro da imagem final) ===
+docker-compose*.yml
+Dockerfile
+
+# === Kubernetes ===
+k8s/
+
+# === IDE / Editor ===
+.vscode
+.idea
+.fleet
+
+# === Documentação ===
+*.md
+!README.md
+
+# === Testes ===
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# === Storage temporário ===
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# === Arquivos auxiliares ===
+TESTAR_CONEXAO_BANCO.php
+verificar_env.php
+fix_migrations.php
+Makefile
