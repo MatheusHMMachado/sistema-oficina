@@ -38,13 +38,13 @@ RUN composer install \
 
 # Copiar código-fonte completo e executar scripts pós-install
 COPY . .
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
 
 # ============================================================
-# STAGE 3 — Imagem final de produção (PHP 8.2-FPM Alpine)
+# STAGE 3 — Imagem final de produção (PHP 8.4-FPM Alpine)
 # ============================================================
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.4-fpm-alpine AS production
 
 LABEL maintainer="Sistema Oficina Mecânica"
 LABEL description="Imagem de produção do Sistema de Gerenciamento de Oficina"
@@ -77,6 +77,7 @@ RUN apk add --no-cache \
 
 # Instalar extensão Redis via PECL
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl update-channels \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps
