@@ -22,6 +22,9 @@ if [ "$1" = 'php-fpm' ]; then
 
     echo "Rodando as migrations do banco de dados..."
     php artisan migrate --force || echo "Aviso: Migrations falharam ou o banco ainda não está pronto."
+
+    echo "Garantindo usuário administrador padrão..."
+    php artisan db:seed --class=UserSeeder --force || true
 fi
 
 echo "Iniciando processo principal: $@"

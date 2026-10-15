@@ -77,6 +77,11 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
+// Healthcheck do Railway e Docker
+Route::get('/health', function () {
+    return response('OK', 200)->header('Content-Type', 'text/plain');
+});
+
 // Redirecionar raiz
 Route::get('/', function () {
     return redirect()->route('login');
