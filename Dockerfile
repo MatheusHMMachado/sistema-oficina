@@ -124,8 +124,8 @@ RUN mkdir -p \
         storage \
         bootstrap/cache
 
-# Expor portas: PHP-FPM (9000) e Nginx (80)
-EXPOSE 80 9000
+# Expor portas HTTP públicas suportadas pelo Nginx (80 e 8080)
+EXPOSE 80 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

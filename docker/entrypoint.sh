@@ -1,11 +1,14 @@
 #!/bin/sh
 set -e
 
-# Ajusta a porta do Nginx dinamicamente caso a plataforma forneça a variável $PORT (Railway, Render, Fly.io)
-if [ -n "$PORT" ]; then
-    echo "Ajustando porta do Nginx para $PORT..."
-    sed -i "s/listen 80;/listen $PORT;/g" /etc/nginx/http.d/default.conf
+# Adiciona a porta dinâmica do Railway caso seja diferente de 80 e 8080
+if [ -n "$PORT" ] && [ "$PORT" != "80" ] && [ "$PORT" != "8080" ]; then
+    echo "Adicionando porta customizada $PORT ao Nginx..."
+    sed -i "s/listen 8080 default_server;/listen 8080 default_server;\n    listen $PORT default_server;/g" /etc/nginx/http.d/default.conf
 fi
+
+# Valida as configurações do Nginx
+nginx -t
 
 # Se o comando passado for o php-fpm (o padrão do Dockerfile), rodar o nginx também
 if [ "$1" = 'php-fpm' ]; then
