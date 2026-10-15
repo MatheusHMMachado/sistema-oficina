@@ -11,11 +11,11 @@ services:
       - APP_DEBUG=false
       - APP_KEY=base64:lQkXqprHEOPxSffxZ4/qiRvPXcAj5bua50lRt/1LJMU=
       - APP_URL=http://localhost:8000
-      - DB_CONNECTION=mysql
+      - DB_CONNECTION=pgsql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_DATABASE=sistema_oficina
-      - DB_USERNAME=root
+      - DB_USERNAME=postgres
       - DB_PASSWORD=secret
       - REDIS_HOST=redis
       - REDIS_PASSWORD=null
@@ -32,22 +32,23 @@ services:
       - app-network
 
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_DATABASE=sistema_oficina
-      - MYSQL_ROOT_PASSWORD=secret
+      - POSTGRES_DB=sistema_oficina
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
-      interval: 15s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sistema_oficina"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
