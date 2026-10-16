@@ -2,7 +2,7 @@
 @php
     $tailwindLocal = public_path('vendor/tailwindcss.js');
     $tailwindSrc = file_exists($tailwindLocal)
-        ? asset('vendor/tailwindcss.js')
+        ? '/vendor/tailwindcss.js'
         : 'https://cdn.tailwindcss.com/3.4.17';
 @endphp
 <script src="{{ $tailwindSrc }}"></script>

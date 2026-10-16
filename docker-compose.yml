@@ -7,8 +7,8 @@ services:
     ports:
       - "8000:80"
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
+      - APP_ENV=local
+      - APP_DEBUG=true
       - APP_KEY=base64:lQkXqprHEOPxSffxZ4/qiRvPXcAj5bua50lRt/1LJMU=
       - APP_URL=http://localhost:8000
       - DB_CONNECTION=pgsql
