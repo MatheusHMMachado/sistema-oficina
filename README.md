@@ -1,66 +1,223 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚗 Sistema de Gerenciamento de Oficina Mecânica
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.4" />
+  <img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL 16" />
+  <img src="https://img.shields.io/badge/Redis-7.x-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis 7" />
+  <img src="https://img.shields.io/badge/Docker-Multi--stage-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Nginx-Alpine-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" />
+  <img src="https://img.shields.io/badge/Railway-Deploy%20%26%20CI%2FCD-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway" />
 </p>
 
-## About Laravel
+Sistema web completo para automação, controle operacional e gestão de oficinas mecânicas e centros automotivos. Desenvolvido como projeto de conclusão de curso (**TCC II - Engenharia de Software**), o sistema adota padrões consolidados de engenharia, arquitetura em contêineres, testes contínuos e entrega automatizada com ambientes efêmeros.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📌 Sumário
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. [Visão Geral dos Módulos](#-visão-geral-dos-módulos)
+2. [Stack Tecnológica e Arquitetura](#-stack-tecnológica-e-arquitetura)
+3. [Credenciais de Teste](#-credenciais-de-teste)
+4. [Como Executar Localmente](#-como-executar-localmente)
+   - [Opção 1: Via Docker (Recomendado)](#opção-1-via-docker-recomendado)
+   - [Opção 2: Ambiente Local sem Docker](#opção-2-ambiente-local-sem-docker)
+5. [Ambientes e Pipeline de CI/CD (Railway)](#-ambientes-e-pipeline-de-cicd-railway)
+6. [Fluxo de Desenvolvimento e Contribuição](#-fluxo-de-desenvolvimento-e-contribuição)
+7. [Documentação Técnica (Pasta Docs)](#-documentação-técnica)
+8. [Licença e Autoria](#-licença-e-autoria)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Visão Geral dos Módulos
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+O sistema é dividido em painel operacional/administrativo interno e portal público do cliente:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Gestão de Ordens de Serviço (OS)
+- **Ciclo de Vida Completo:** Abertura, diagnóstico, orçamento, execução, conclusão e cancelamento.
+- **Numeração Automática:** Formato sequencial anual padronizado (`AAAA000001`).
+- **Itens e Precificação:** Adição dinâmica de peças e serviços com cálculo automático de subtotal, descontos e total.
+- **Emissão em PDF:** Geração de espelho da OS para impressão ou envio ao cliente via `barryvdh/laravel-dompdf`.
 
-## Laravel Sponsors
+### 2. Checklist e Inspeção Veicular
+- Vistoria de entrada com 12 pontos essenciais (lataria, nível de óleo, pneus, vidros, freios, etc.).
+- Registro de fotos e observações por ponto de vistoria para segurança jurídica da oficina e transparência com o cliente.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### 3. Controle de Estoque e Catálogo
+- Cadastro unificado de serviços de mão de obra e peças de reposição.
+- **Baixa Automática:** Decremento automático do estoque ao vincular peças à OS.
+- **Restauração em Cancelamento:** Devolução automática do estoque ao cancelar a OS ou desvincular itens.
+- Alertas visuais e relatórios de **estoque mínimo** e **estoque crítico**.
 
-### Premium Partners
+### 4. Controle de Acesso e Gestão de Funcionários (RBAC)
+- **Administrador:** Acesso irrestrito a relatórios financeiros, configurações, faturamento e gestão de equipe.
+- **Mecânico:** Interface focada apenas nas OS atribuídas a ele, checklist de tarefas e atualização de status operacional.
+- Controle de **SLA de tarefas** atribuídas a cada mecânico.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### 5. Clientes e Veículos
+- Relacionamento 1:N entre clientes e veículos.
+- Histórico completo de manutenções e passagens na oficina registrado por placa.
+- Validação estrita de CPF, telefones e regras de duplicidade.
 
-## Contributing
+### 6. Agendamento e Recepção
+- Agendamento prévio por clientes cadastrados ou visitantes.
+- Painel de aprovação pelo administrador com conversão automática de agendamento em Ordem de Serviço, cliente e veículo no sistema.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 7. Portal do Cliente e Consulta Pública
+- **Área Logada do Cliente (`/portal`):** Histórico de ordens, orçamentos pendentes, aprovação digital e agendamento.
+- **Consulta Pública (`/portal/consulta`):** Consulta simplificada e rápida informando apenas **CPF + Placa**, sem necessidade de login prévio.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🛠 Stack Tecnológica e Arquitetura
 
-## Security Vulnerabilities
+| Camada | Tecnologia | Detalhes |
+| :--- | :--- | :--- |
+| **Backend** | PHP 8.4-FPM + Laravel 12 | Arquitetura MVC, Eloquent ORM, Form Requests, Seeders |
+| **Frontend** | Blade + Vite + JavaScript / CSS | Interface responsiva, modais dinâmicos, assets compilados |
+| **Banco de Dados** | PostgreSQL 16 | Relacional, transações ACID, integridade referencial estrita |
+| **Cache & Sessão** | Redis 7 | Gerenciamento de sessões, cache e rate limiting |
+| **Servidor Web** | Nginx (Alpine Linux) | Roteamento HTTP reverso, compressão gzip e headers seguros |
+| **Contêineres** | Docker & Docker Compose | Multi-stage build com parity dev/prod e entrypoint dinâmico |
+| **Cloud / CI/CD** | Railway | Deploy contínuo, staging isolado e PR Environments efêmeros |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🔑 Credenciais de Teste
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Para facilitar a homologação e demonstração, o sistema conta com seeders pré-configurados:
+
+| Interface | URL | Identificador / E-mail | Senha | Perfil |
+| :--- | :--- | :--- | :--- | :--- |
+| **Painel Admin** | `/login` | `admin@oficina.com` | `admin123` | Administrador Completo |
+| **Painel Mecânico**| `/login` | `mecanico@oficina.com` | `mecanico123` | Mecânico / Operacional |
+| **Portal do Cliente**| `/portal` | CPF `529.982.247-25` | `cliente123` | Cliente com Veículo e Histórico |
+| **Consulta Pública** | `/portal/consulta` | CPF `529.982.247-25` | Placa: `ABC1D23` | Consulta de OS sem login |
+
+---
+
+## 💻 Como Executar Localmente
+
+### Opção 1: Via Docker (Recomendado)
+
+O projeto conta com ambiente completo e orquestrado via `docker-compose`:
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/VitorHugoaaaaaaas/sistema-oficina.git
+   cd sistema-oficina
+   ```
+
+2. **Copie o arquivo de variáveis de ambiente:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Inicie os contêineres:**
+   ```bash
+   docker compose up -d --build
+   ```
+   *O contêiner executa automaticamente a compilação do Vite, link do storage, migrations do PostgreSQL e criação dos usuários de teste.*
+
+4. **Acesse a aplicação no navegador:**
+   > [http://localhost:8000](http://localhost:8000)
+
+5. **Para parar os serviços:**
+   ```bash
+   docker compose down
+   ```
+
+---
+
+### Opção 2: Ambiente Local sem Docker
+
+Requisitos: **PHP 8.2+**, **Composer 2**, **Node.js 18+**, **PostgreSQL 14+** e **Redis**.
+
+1. Instale as dependências PHP:
+   ```bash
+   composer install
+   ```
+
+2. Instale e compile os assets frontend:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+3. Configure o `.env` com suas credenciais do PostgreSQL e execute:
+   ```bash
+   php artisan key:generate
+   php artisan storage:link
+   php artisan migrate --seed
+   ```
+
+4. Inicie o servidor embutido:
+   ```bash
+   php artisan serve
+   ```
+
+---
+
+## ☁️ Ambientes e Pipeline de CI/CD (Railway)
+
+A infraestrutura está configurada no Railway com total isolamento de ambientes e proteção de dados:
+
+```mermaid
+graph TD
+    subgraph Desenvolvimento e PR
+        FEAT[Branch feature/*] -->|Abre Pull Request| PR[Ambiente Efêmero Railway: pr-XX]
+        PR -->|Banco PostgreSQL Efêmero + Seeding| QA[Testes e Homologação]
+    end
+
+    subgraph Integração Contínua
+        QA -->|Approve & Merge| DEV[Branch develop]
+        DEV -->|Deploy Contínuo| STG[Ambiente Staging Railway]
+    end
+
+    subgraph Produção Estável
+        STG -->|Release PR| MAIN[Branch main]
+        MAIN -->|Deploy Seguro| PROD[Ambiente de Produção Railway]
+    end
+```
+
+- **Ambientes Efêmeros (PR Environments):** Cada Pull Request aberto no GitHub aciona o provisionamento automático de um contêiner com PostgreSQL isolado, que roda migrations e semeia dados fictícios completos em segundos. A URL temporária é postada automaticamente no PR.
+- **Destruição Automática (Teardown):** Ao fechar ou aprovar o merge do PR, o ambiente temporário e o banco efêmero são imediatamente destruídos.
+- **Ambiente de Produção:** Conectado à branch `main`, opera com banco de dados real e executa apenas migrações seguras (`UserSeeder` idempotente), garantindo sigilo e integridade conforme a LGPD.
+
+---
+
+## 🤝 Fluxo de Desenvolvimento e Contribuição
+
+O projeto utiliza **GitHub Issues** e **GitHub Projects** para rastreabilidade:
+
+1. **Abertura da Tarefa:** Crie uma Issue utilizando um dos templates padronizados:
+   - 🐛 **Report de Bug (`bug_report.yml`):** Para comunicar inconsistências com módulo, severidade e passos de reprodução.
+   - 💡 **Solicitação de Melhoria (`feature_request.yml`):** Para propor novidades com justificativa e critérios de aceitação.
+2. **Criação de Branch:**
+   ```bash
+   git checkout -b feature/#<id-da-issue>-descricao-curta
+   ```
+3. **Commits Semânticos:**
+   ```bash
+   git commit -m "feat(os): adicionar validacao de quilometragem na abertura (#14)"
+   ```
+4. **Pull Request:** Abra o PR vinculando a Issue (`Closes #14`). Aguarde a geração do ambiente temporário no Railway para validação antes do merge.
+
+---
+
+## 📚 Documentação Técnica
+
+Documentos acadêmicos e especificações formais do TCC disponíveis no diretório [`Docs/`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs):
+
+- [`01-modelo-entidade-relacionamento.md`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs/01-modelo-entidade-relacionamento.md) — Diagrama Entidade-Relacionamento e dicionário de dados.
+- [`02-regras-de-negocio.md`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs/02-regras-de-negocio.md) — Catálogo de regras de negócio (RNs) e validações.
+- [`03-requisitos-funcionais-e-nao-funcionais.md`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs/03-requisitos-funcionais-e-nao-funcionais.md) — Requisitos priorizados (RFs e RNFs).
+- [`04-infraestrutura-conteinerizacao-e-deploy.md`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs/04-infraestrutura-conteinerizacao-e-deploy.md) — Arquitetura de infraestrutura, contêineres e deploy no padrão ABNT.
+- [`CREDENCIAIS_TESTE.md`](file:///c:/Users/mathe/OneDrive/Engenharia%20de%20Software/8%C2%BA%20Per%C3%ADodo/TCC%202/sistema-oficina/Docs/CREDENCIAIS_TESTE.md) — Credenciais e cenários de teste pré-populados.
+
+---
+
+## 📄 Licença e Autoria
+
+Este projeto é desenvolvido para fins acadêmicos no curso de **Bacharelado em Engenharia de Software**.
+Distribuído sob a licença [MIT](LICENSE).
