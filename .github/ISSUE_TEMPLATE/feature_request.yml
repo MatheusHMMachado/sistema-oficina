@@ -1,0 +1,120 @@
+name: ✨ Solicitação de Melhoria / Nova Funcionalidade
+description: Proponha novas funcionalidades, otimizações de fluxo, melhorias visuais ou refatorações técnicas no sistema.
+title: "[MELHORIA]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Central de Melhorias & Evolução do Sistema - Oficina Mecânica
+        Utilize este formulário para propor novas features, refatorações ou otimizações no backlog do projeto (TCC 2).
+
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo Impactado
+      description: Selecione a área funcional do sistema onde a melhoria será implementada.
+      options:
+        - "Ordens de Serviço (OS) & Serviços Mecânicos"
+        - "Portal do Cliente & Acesso Público (/portal)"
+        - "Estoque de Peças & Catálogo de Serviços"
+        - "Checklist & Vistoria de Entrada/Saída do Veículo"
+        - "Cadastro de Veículos & Histórico de Placas"
+        - "Cadastro de Clientes & Frotistas"
+        - "Controle Financeiro, Despesas & Pagamentos"
+        - "Agendamentos & Carga de Mecânicos"
+        - "Atribuições de Mecânicos & Gestão de SLA"
+        - "Copiloto de IA (Assistente Diagnóstico)"
+        - "Relatórios Gerenciais (PDF / Indicadores)"
+        - "Configurações, Tema Whitelabel & Modo Escuro"
+        - "Autenticação, Funcionários & Permissões"
+        - "Infraestrutura, Docker & Deploy (Railway / PostgreSQL / Redis)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tipo_melhoria
+    attributes:
+      label: Tipo de Melhoria
+      description: Qual a natureza técnica ou funcional desta task?
+      options:
+        - "Nova Funcionalidade (Feature Inédita)"
+        - "Melhoria de Usabilidade & UX/UI (Interface / Telas)"
+        - "Otimização de Performance & Caching (Redis / Consultas SQL)"
+        - "Refatoração de Código & Arquitetura (Clean Code / Boas Práticas)"
+        - "Segurança, Sessão & Controle de Acesso"
+        - "Relatórios, Exportações & Indicadores de Gestão"
+        - "Infraestrutura & DevOps (Docker / CI/CD / Automação)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridade_negocio
+    attributes:
+      label: Prioridade Sugerida
+      description: Nível de relevância para o negócio da oficina e para o escopo do projeto.
+      options:
+        - "Alta (Impacto direto na produtividade da oficina ou experiência do cliente)"
+        - "Média (Otimização importante de fluxo ou enriquecimento de dados)"
+        - "Baixa (Desejável / Nice to have / Melhoria estética futura)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto_problema
+    attributes:
+      label: Motivação e Contexto de Negócio
+      description: Qual necessidade, limitação atual ou dor do usuário essa melhoria visa resolver?
+      placeholder: |
+        **Problema Atual:**
+        Atualmente, o mecânico precisa consultar o estoque em outra tela antes de incluir uma peça na Ordem de Serviço, o que gera lentidão no atendimento.
+
+        **Público Beneficiado:**
+        Mecânicos da oficina e atendentes do balcão.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solucao_proposta
+    attributes:
+      label: Descrição da Solução Proposta
+      description: Como a funcionalidade ou melhoria deve se comportar? Descreva regras de negócio, telas e novos campos.
+      placeholder: |
+        Adicionar um indicador visual da quantidade disponível em estoque diretamente no modal de seleção de peças da OS.
+        Caso o estoque esteja abaixo do mínimo configurado, exibir uma badge de aviso em cor amarela/laranja.
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios_aceite
+    attributes:
+      label: Critérios de Aceite (Definition of Done)
+      description: Liste os critérios objetivos que comprovam que a task foi entregue com sucesso.
+      placeholder: |
+        - [ ] O seletor de peças da OS deve exibir a quantidade em estoque em tempo real.
+        - [ ] Não deve ser permitido faturar uma OS com quantidade de peças superior ao estoque físico.
+        - [ ] O layout deve se manter responsivo em telas de tablets e dispositivos móveis dos mecânicos.
+        - [ ] Testes unitários/feature cobrindo o novo comportamento implementados.
+    validations:
+      required: true
+
+  - type: textarea
+    id: referencias_mockups
+    attributes:
+      label: Referências, Mockups ou Esboços
+      description: Anexe prints anotados, links de referências visuais ou diagramas explicativos.
+      placeholder: "Cole links de mockups ou arraste imagens de referência para cá..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist_melhoria
+    attributes:
+      label: Checklist de Alinhamento
+      options:
+        - label: "Verifiquei no GitHub Projects se não existe uma sugestão idêntica ou similar em aberto."
+          required: true
+        - label: "A proposta está alinhada ao escopo do projeto de conclusão de curso (TCC 2)."
+          required: false
+        - label: "Os critérios de aceite estão detalhados o suficiente para guiar o desenvolvimento e os testes."
+          required: true

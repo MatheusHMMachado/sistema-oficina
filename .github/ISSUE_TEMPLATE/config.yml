@@ -1,0 +1,11 @@
+# Bloqueia a opção "Open a blank issue", forçando o uso dos templates estruturados YAML
+blank_issues_enabled: false
+
+# Atalhos úteis exibidos na tela de seleção de novas issues
+contact_links:
+  - name: 📖 Documentação Técnica do Projeto (TCC 2)
+    url: https://github.com/VitorHugoaaaaaaas/sistema-oficina/tree/main/Docs
+    about: Consulte requisitos funcionais, regras de negócio e arquitetura do sistema antes de abrir uma issue.
+  - name: 🚨 Monitoramento e Infraestrutura (Railway)
+    url: https://railway.app
+    about: Verifique o status dos containers, logs do PostgreSQL e métricas de produção.

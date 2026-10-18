@@ -1,0 +1,126 @@
+name: 🐛 Relato de Bug / Falha em Testes
+description: Registre inconsistências, erros de execução ou falhas funcionais encontradas no Sistema de Oficina.
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Central de Chamados de Testes - Sistema de Gerenciamento de Oficina
+        Preencha os campos abaixo com o máximo de precisão. Isso reduz o tempo de investigação e evita retrabalho para reproduzir o problema.
+
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo do Sistema
+      description: Selecione o módulo funcional da oficina onde o erro foi identificado.
+      options:
+        - "Ordens de Serviço (OS) & Serviços Mecânicos"
+        - "Portal do Cliente & Acesso Público (/portal)"
+        - "Estoque de Peças & Catálogo de Serviços"
+        - "Checklist & Vistoria de Entrada/Saída do Veículo"
+        - "Cadastro de Veículos & Histórico de Placas"
+        - "Cadastro de Clientes & Frotistas"
+        - "Controle Financeiro, Despesas & Pagamentos"
+        - "Agendamentos & Carga de Mecânicos"
+        - "Atribuições de Mecânicos & Gestão de SLA"
+        - "Copiloto de IA (Assistente Diagnóstico)"
+        - "Relatórios Gerenciais (PDF / Indicadores)"
+        - "Configurações, Tema Whitelabel & Modo Escuro"
+        - "Autenticação, Funcionários & Permissões"
+        - "Infraestrutura, Docker & Deploy (Railway / PostgreSQL / Redis)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ambiente
+    attributes:
+      label: Ambiente Onde Ocorreu
+      description: Em qual instância o erro foi reproduzido?
+      options:
+        - "Railway - Produção (Domínio Próprio / HTTPS)"
+        - "Railway - Staging / Preview (Pull Request)"
+        - "Ambiente Local (Docker Compose / Containers)"
+        - "Ambiente Local (PHP Artisan Serve / XAMPP)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severidade
+    attributes:
+      label: Severidade e Impacto no Negócio
+      description: Classificação preliminar para priorização no GitHub Projects.
+      options:
+        - "P1 - Crítico / Bloqueante (Sistema fora do ar, erro 500 em fluxo vital, falha financeira/dados)"
+        - "P2 - Alto (Fluxo essencial inoperante, sem contorno viável para o mecânico/gestor)"
+        - "P3 - Médio (Falha funcional com contorno temporário disponível)"
+        - "P4 - Baixo / Cosmético (Label incorreto, espaçamento quebrado, melhoria visual pontual)"
+    validations:
+      required: true
+
+  - type: input
+    id: dados_referencia
+    attributes:
+      label: Dados de Referência para Teste
+      description: Indique placas, IDs de OS ou e-mails de teste para localizar o registro no banco de dados.
+      placeholder: "Ex: Placa ABC-1234, OS #1042, Peça SKU 204, Cliente ID 77, Usuário admin@oficina.com"
+    validations:
+      required: false
+
+  - type: textarea
+    id: passos_reproducao
+    attributes:
+      label: Passos para Reproduzir o Problema
+      description: Passo a passo numerado, objetivo e determinístico.
+      placeholder: |
+        1. Acessar o menu 'Ordens de Serviço'.
+        2. Abrir a OS de número 1042 associada ao veículo placa ABC-1234.
+        3. Clicar em 'Adicionar Item' e selecionar a peça 'Pastilha de Freio'.
+        4. Clicar no botão 'Salvar e Faturar'.
+    validations:
+      required: true
+
+  - type: textarea
+    id: comportamento_esperado_obtido
+    attributes:
+      label: Comportamento Esperado vs. Comportamento Obtido
+      description: O que a regra de negócio da oficina exigia e o que a aplicação entregou.
+      placeholder: |
+        **Comportamento Esperado:**
+        O item deveria ser adicionado à OS, o estoque debitado e o status alterado para 'Finalizada'.
+
+        **Comportamento Obtido:**
+        Aparece uma tela com erro 500 / Toast de falha, o estoque não foi decrementado e a ordem permaneceu com status pendente.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs_diagnostico
+    attributes:
+      label: Logs do Laravel, Railway ou Console do Navegador
+      description: Cole aqui a stack trace do storage/logs/laravel.log, logs do Railway ou console do navegador (F12).
+      render: shell
+      placeholder: "Ex: [2026-10-18 11:30:00] production.ERROR: SQLSTATE[23505]: Unique violation: 7 ERROR: duplicate key value violates unique constraint... in /var/www/html/app/Http/Controllers/OrdemServicoController.php:124"
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidencias_visuais
+    attributes:
+      label: Evidências Visuais (Prints ou Vídeos)
+      description: Arraste e solte capturas de tela ou cole links de gravação curta (Loom, CleanShot, etc.).
+      placeholder: "Arraste prints de tela para cá..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist_validacao
+    attributes:
+      label: Checklist do Relator
+      options:
+        - label: "Verifiquei no GitHub Projects se não existe uma Issue aberta para este mesmo problema."
+          required: true
+        - label: "O erro foi reproduzido mais de uma vez seguindo os passos indicados."
+          required: false
+        - label: "Incluí identificadores (IDs, placas, logs) suficientes para investigação no PostgreSQL/Railway."
+          required: true
