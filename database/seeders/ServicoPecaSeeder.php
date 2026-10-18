@@ -18,15 +18,18 @@ class ServicoPecaSeeder extends Seeder
             ['descricao' => 'Troca de pastilhas de freio', 'valor_unitario' => 80.00, 'tipo' => 'servico'],
             
             // Peças
-            ['descricao' => 'Óleo motor 5W30 - 1L', 'valor_unitario' => 35.00, 'tipo' => 'peca'],
-            ['descricao' => 'Filtro de óleo', 'valor_unitario' => 15.00, 'tipo' => 'peca'],
-            ['descricao' => 'Filtro de ar', 'valor_unitario' => 25.00, 'tipo' => 'peca'],
-            ['descricao' => 'Pastilhas de freio dianteira', 'valor_unitario' => 120.00, 'tipo' => 'peca'],
-            ['descricao' => 'Bateria 60Ah', 'valor_unitario' => 280.00, 'tipo' => 'peca'],
+            ['descricao' => 'Óleo motor 5W30 - 1L', 'valor_unitario' => 35.00, 'tipo' => 'peca', 'quantidade_estoque' => 25, 'estoque_minimo' => 5],
+            ['descricao' => 'Filtro de óleo', 'valor_unitario' => 15.00, 'tipo' => 'peca', 'quantidade_estoque' => 15, 'estoque_minimo' => 5],
+            ['descricao' => 'Filtro de ar', 'valor_unitario' => 25.00, 'tipo' => 'peca', 'quantidade_estoque' => 12, 'estoque_minimo' => 3],
+            ['descricao' => 'Pastilhas de freio dianteira', 'valor_unitario' => 120.00, 'tipo' => 'peca', 'quantidade_estoque' => 8, 'estoque_minimo' => 2],
+            ['descricao' => 'Bateria 60Ah', 'valor_unitario' => 280.00, 'tipo' => 'peca', 'quantidade_estoque' => 6, 'estoque_minimo' => 2],
         ];
 
         foreach ($items as $item) {
-            ServicoPeca::create($item);
+            ServicoPeca::firstOrCreate(
+                ['descricao' => $item['descricao']],
+                $item
+            );
         }
     }
 }

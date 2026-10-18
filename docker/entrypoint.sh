@@ -18,6 +18,12 @@ if [ "$1" = 'php-fpm' ]; then
     echo "Criando link simbólico do storage..."
     php artisan storage:link || true
 
+    # Se RAILWAY_PUBLIC_DOMAIN estiver definido e não for produção, ajusta o APP_URL
+    if [ -n "$RAILWAY_PUBLIC_DOMAIN" ] && [ "$APP_ENV" != "production" ]; then
+        echo "Railway Public Domain detectado: https://$RAILWAY_PUBLIC_DOMAIN"
+        export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
+    fi
+
     echo "Realizando cache das configurações..."
     php artisan config:cache || true
     php artisan route:cache || true
@@ -26,8 +32,24 @@ if [ "$1" = 'php-fpm' ]; then
     echo "Rodando as migrations do banco de dados..."
     php artisan migrate --force || echo "Aviso: Migrations falharam ou o banco ainda não está pronto."
 
-    echo "Garantindo usuário administrador padrão..."
-    php artisan db:seed --class=UserSeeder --force || true
+    # Identifica se é ambiente de Staging, Teste ou PR Efêmero do Railway
+    IS_PR_OR_STAGING=false
+    if [ "$RUN_SEEDS" = "true" ] || [ "$RUN_SEEDS" = "1" ]; then
+        IS_PR_OR_STAGING=true
+    elif [ "$APP_ENV" = "staging" ] || [ "$APP_ENV" = "testing" ]; then
+        IS_PR_OR_STAGING=true
+    elif [ -n "$RAILWAY_ENVIRONMENT_NAME" ] && [ "$RAILWAY_ENVIRONMENT_NAME" != "production" ]; then
+        IS_PR_OR_STAGING=true
+    fi
+
+    if [ "$IS_PR_OR_STAGING" = "true" ]; then
+        echo "Ambiente Staging/PR Efêmero detectado (RAILWAY_ENV=${RAILWAY_ENVIRONMENT_NAME:-N/A}, APP_ENV=${APP_ENV:-N/A})."
+        echo "Executando DatabaseSeeder completo (admin, mecânico, clientes, veículos e catálogo)..."
+        php artisan db:seed --force || echo "Aviso: db:seed falhou ou já executado parcialmente."
+    else
+        echo "Ambiente de Produção detectado. Garantindo apenas usuário administrador padrão..."
+        php artisan db:seed --class=UserSeeder --force || true
+    fi
 fi
 
 echo "Iniciando processo principal: $@"
